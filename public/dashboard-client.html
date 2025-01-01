@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard - HomeServices</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <!-- Navigation Bar -->
+    <nav class="dashboard-nav">
+        <div class="nav-brand" onclick="location.href='index.html'">HomeServices</div>
+        <div class="client-info">
+            <img src="profile-pic.jpg" alt="Profile Picture" id="profile-pic">
+            <span id="username">Loading...</span>
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="profile-section">
+                <div class="profile-image">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="client-status">
+                    <span id="currentStatus" class="status-badge active">Active</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="showSection('search')">
+                    <i class="fas fa-search"></i> Search Services
+                </button>
+                <button class="nav-item" onclick="showSection('bookings')">
+                    <i class="fas fa-calendar-check"></i> Upcoming Bookings
+                </button>
+                <button class="nav-item" onclick="showSection('notifications')">
+                    <i class="fas fa-bell"></i> Notifications
+                </button>
+                <button class="nav-item" onclick="showSection('payments')">
+                    <i class="fas fa-credit-card"></i> Payments
+                </button>
+                <button class="nav-item" onclick="showSection('reviews')">
+                    <i class="fas fa-star"></i> Reviews
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Search Services Section -->
+            <section id="search" class="dashboard-section active">
+                <h2>Search Services</h2>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search for services..." id="search-input">
+                    <button onclick="searchServices()">Search</button>
+                </div>
+                <div class="service-listings">
+                    <h3>Available Services</h3>
+                    <div id="services-container">
+                        <p>Loading services...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upcoming Bookings Section -->
+            <section id="bookings" class="dashboard-section">
+                <h2>Upcoming Bookings</h2>
+                <div id="bookings-container">
+                    <p>No bookings yet.</p>
+                </div>
+            </section>
+
+            <!-- Notifications Section -->
+            <section id="notifications" class="dashboard-section">
+                <h2>Notifications</h2>
+                <div id="notifications-container">
+                    <p>No notifications at the moment.</p>
+                </div>
+            </section>
+
+            <!-- Payments Section -->
+            <section id="payments" class="dashboard-section">
+                <h2>Make a Payment</h2>
+                <form id="payment-form">
+                    <!-- Payment Method Selection -->
+                    <div class="payment-method">
+                        <label>
+                            <input type="radio" name="payment-method" value="cash" checked onclick="toggleCreditCardFields(false)">
+                            Cash on Service
+                        </label>
+                        <label>
+                            <input type="radio" name="payment-method" value="online" onclick="toggleCreditCardFields(true)">
+                            Online Payment
+                        </label>
+                    </div>
+
+                    <!-- Credit Card Fields (Hidden by Default) -->
+                    <div id="credit-card-fields" style="display: none;">
+                        <label for="card-number">Card Number:</label>
+                        <input type="text" id="card-number">
+                        <label for="expiry-date">Expiry Date:</label>
+                        <input type="text" id="expiry-date">
+                        <label for="cvv">CVV:</label>
+                        <input type="text" id="cvv">
+                    </div>
+
+                    <button type="submit">Pay Now</button>
+                </form>
+            </section>
+
+            <!-- Reviews Section -->
+            <section id="reviews" class="dashboard-section">
+                <h2>Service Reviews</h2>
+                <div id="reviews-container">
+                    <p>No reviews available.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="client-dashboard.js"></script>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>Contact us: support@homeservices.com | +123 456 7890</p>
+        <div class="social-media">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('username').textContent = user.full_name;
+                } else {
+                    console.error('Failed to fetch user data');
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login.html';
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
+        }
+
+        async function searchServices() {
+            try {
+                const response = await fetch('/services/available', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    const services = await response.json();
+                    const container = document.getElementById('services-container');
+                    container.innerHTML = '';
+                    services.forEach(service => {
+                        const div = document.createElement('div');
+                        div.className = 'service';
+                        div.innerHTML = `
+                            <h3>${service.name}</h3>
+                            <p>Provider: ${service.worker_name}</p>
+                            <p>Price: $${service.price}</p>
+                            <p>Available: ${service.availability}</p>
+                            <button onclick="bookService(${service.id})">Book Now</button>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    console.error('Failed to fetch services');
+                }
+            } catch (error) {
+                console.error('Error fetching services:', error);
+            }
+        }
+
+        async function bookService(serviceId) {
+            try {
+                const response = await fetch('/services/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ serviceId })
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(result.message);
+                    searchServices();
+                } else {
+                    alert('Failed to book service.');
+                }
+            } catch (error) {
+                console.error('Error booking service:', error);
+            }
+        }
+
+        function toggleCreditCardFields(show) {
+            const creditCardFields = document.getElementById('credit-card-fields');
+            creditCardFields.style.display = show ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserData();
+            searchServices();
+
+            document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    toggleCreditCardFields(e.target.value === 'online');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+async function logout() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No token found. You are already logged out.');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const response = await fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Ensure cookies are sent with the request
+        });
+
+        if (response.ok) {
+            localStorage.removeItem('token'); // Clear the token from localStorage
+            window.location.href = '/login.html'; // Redirect to the login page
+        } else {
+            const result = await response.json();
+            alert(result.message || 'Logout failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        alert('An error occurred while logging out.');
+    }
+}

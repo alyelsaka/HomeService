@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard - HomeServices</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <nav class="dashboard-nav">
+        <div class="nav-brand" onclick="location.href='index.html'">HomeServices</div>
+        <div class="worker-info">
+            <span id="workerName">Welcome, <span id="workerNamePlaceholder">Loading...</span></span>
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="profile-section">
+                <div class="profile-image">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="worker-status">
+                    <span id="currentStatus" class="status-badge available">Available</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="showSection('bookings')">
+                    <i class="fas fa-calendar-check"></i> Current Bookings
+                </button>
+                <button class="nav-item" onclick="showSection('availability')">
+                    <i class="fas fa-clock"></i> Availability
+                </button>
+                <button class="nav-item" onclick="showSection('notifications')">
+                    <i class="fas fa-bell"></i> Notifications
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Current Bookings Section -->
+            <section id="bookings" class="dashboard-section active">
+                <h2>Current Bookings</h2>
+                <div id="bookingsContainer" class="bookings-grid">
+                    <p>Loading bookings...</p>
+                </div>
+            </section>
+
+            <!-- Availability Management Section -->
+            <section id="availability" class="dashboard-section">
+                <h2>Manage Availability</h2>
+                <div class="availability-container">
+                    <div class="availability-status">
+                        <h3>Current Status</h3>
+                        <div class="status-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="availabilityToggle" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span id="availabilityText">Available for Work</span>
+                        </div>
+                    </div>
+
+                    <div id="availability-form-container">
+                        <form id="availability-form" class="availability-form">
+                            <h3>Set Your Availability</h3>
+                            <label for="start-time">Start Time:</label>
+                            <input type="time" id="start-time" required>
+                            <label for="end-time">End Time:</label>
+                            <input type="time" id="end-time" required>
+                            <button type="submit" class="save-availability-btn">Update Availability</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notifications Section -->
+            <section id="notifications" class="dashboard-section">
+                <h2>Notifications</h2>
+                <div id="notificationsContainer" class="notifications-container">
+                    <p>No new notifications.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="dashboard-footer">
+        <p>Contact us: support@homeservices.com | +123 456 7890</p>
+        <div class="social-media">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+    </footer>
+
+    <!-- Connect JavaScript -->
+    <script src="worker-dashboard.js"></script>
+</body>
+</html>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update navigation highlighting
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Toggle availability status
+        document.getElementById('availabilityToggle').addEventListener('change', function (e) {
+            const statusBadge = document.getElementById('currentStatus');
+            const availabilityText = document.getElementById('availabilityText');
+            if (e.target.checked) {
+                statusBadge.className = 'status-badge available';
+                statusBadge.textContent = 'Available';
+                availabilityText.textContent = 'Available for Work';
+            } else {
+                statusBadge.className = 'status-badge unavailable';
+                statusBadge.textContent = 'Unavailable';
+                availabilityText.textContent = 'Not Available';
+            }
+        });
+
+        function loadBookings() {
+            const container = document.getElementById('bookingsContainer');
+            container.innerHTML = '<p>Loading bookings...</p>';
+            fetch('/worker/bookings')
+                .then(response => response.json())
+                .then(bookings => {
+                    container.innerHTML = '';
+                    if (bookings.length === 0) {
+                        container.innerHTML = '<p>No current bookings.</p>';
+                        return;
+                    }
+                    bookings.forEach(booking => {
+                        const card = document.createElement('div');
+                        card.classList.add('booking-card');
+                        card.innerHTML = `
+                            <div class="booking-header">
+                                <h3>${booking.serviceType}</h3>
+                                <span class="booking-status ${booking.status}">${booking.status}</span>
+                            </div>
+                            <div class="booking-details">
+                                <p><i class="fas fa-user"></i> Client: ${booking.clientName}</p>
+                                <p><i class="fas fa-map-marker-alt"></i> Location: ${booking.location}</p>
+                                <p><i class="fas fa-calendar"></i> Date: ${booking.date}</p>
+                                <p><i class="fas fa-clock"></i> Time: ${booking.time}</p>
+                            </div>
+                            <div class="booking-actions">
+                                <button class="accept-btn" onclick="acceptBooking(${booking.id})">Accept</button>
+                                <button class="decline-btn" onclick="declineBooking(${booking.id})">Decline</button>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => console.error('Error loading bookings:', error));
+        }
+
+        function logout() {
+            fetch('/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(() => {
+                    window.location.href = '/login.html';
+                })
+                .catch(err => console.error('Logout failed:', err));
+        }
+    </script>
+</body>
+</html>
+async function logout() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No token found. You are already logged out.');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const response = await fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Ensure cookies are sent with the request
+        });
+
+        if (response.ok) {
+            localStorage.removeItem('token'); // Clear the token from localStorage
+            window.location.href = '/login.html'; // Redirect to the login page
+        } else {
+            const result = await response.json();
+            alert(result.message || 'Logout failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        alert('An error occurred while logging out.');
+    }
+}

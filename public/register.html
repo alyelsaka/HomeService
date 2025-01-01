@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeServices - Register</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <nav class="navbar">
+        <!-- Updated logo with a clickable link -->
+        <a href="indx.html" class="nav-brand">HomeServices</a>
+        <div class="nav-links">
+            <button onclick="location.href='login.html'" class="login-btn">Login</button>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Create Account</h2>
+                <p>Join our community today</p>
+            </div>
+
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="full_name" required placeholder="Full Name">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" required placeholder="Email Address">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" required placeholder="Password">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-user-tag"></i>
+                    <select name="user_type" required id="userType" onchange="toggleWorkerFields(this.value)">
+                        <option value="">Select Account Type</option>
+                        <option value="client">Client</option>
+                        <option value="worker">Worker</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div id="workerFields" class="worker-fields hidden">
+                    <div class="form-group">
+                        <i class="fas fa-tools"></i>
+                        <select name="service_type" id="skills">
+                            <option value="">Select Your Service</option>
+                            <option value="plumber">Plumber</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="cleaner">Cleaner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="number" name="experience_years" id="experience" placeholder="Years of Experience" min="0" max="50">
+                    </div>
+                </div>
+
+                <button type="button" class="auth-button" id="registerBtn">Register</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.html">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle visibility of worker-specific fields
+        function toggleWorkerFields(userType) {
+            const workerFields = document.getElementById('workerFields');
+            workerFields.classList.toggle('hidden', userType !== 'worker');
+        }
+
+        // Handle registration with feedback and redirection
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const form = document.getElementById('registerForm');
+            const formData = new FormData(form);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formObject)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message || 'Registration successful!');
+                    window.location.href = 'login.html'; // Redirect to login page
+                } else {
+                    alert(result.message || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while registering.');
+            }
+        });
+
+        // Ensure that clicking the HomeServices logo redirects correctly
+        document.querySelector('.nav-brand').addEventListener('click', (event) => {
+            event.preventDefault();
+            location.href = 'indx.html';
+        });
+    </script>
+</body>
+</html>

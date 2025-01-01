@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Services - Welcome</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <!-- Updated logo with a clickable link -->
+        <a href="indx.html" class="nav-brand">HomeServices</a>
+        <div class="nav-links">
+            <button onclick="location.href='login.html'" class="login-btn">Login</button>
+            <button onclick="location.href='register.html'" class="register-btn">Register</button>
+        </div>
+    </nav>
+
+    <main class="hero">
+        <div class="hero-content">
+            <h1>Your Home, Our Priority</h1>
+            <p>Professional home services at your fingertips</p>
+            <div class="cta-buttons">
+                <button onclick="location.href='register.html'" class="primary-btn">Get Started</button>
+                <button onclick="scrollToServices()" class="secondary-btn">Our Services</button>
+            </div>
+        </div>
+    </main>
+
+    <section class="services" id="services">
+        <h2>Our Services</h2>
+        <div class="service-grid">
+            <div class="service-card">
+                <i class="fas fa-wrench"></i>
+                <h3>Plumbing</h3>
+                <p>Expert plumbing repair and installation</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-bolt"></i>
+                <h3>Electrical</h3>
+                <p>Licensed electrical services and maintenance</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-broom"></i>
+                <h3>Cleaning</h3>
+                <p>Thorough home cleaning and organization</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Smooth scrolling to the services section
+        function scrollToServices() {
+            document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Ensure that clicking HomeServices redirects correctly
+        document.querySelector('.nav-brand').addEventListener('click', (event) => {
+            event.preventDefault();
+            location.href = 'indx.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeServices - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-page">
+    <nav class="navbar">
+        <!-- Updated logo with a clickable link -->
+        <a href="indx.html" class="nav-brand">HomeServices</a>
+        <div class="nav-links">
+            <button onclick="location.href='register.html'" class="register-btn">Register</button>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Please log in to your account</p>
+            </div>
+
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" id="email" required placeholder="Email Address">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" id="password" required placeholder="Password">
+                </div>
+
+                <div class="form-options">
+                    <label>
+                        <input type="checkbox" name="remember"> Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="button" class="auth-button" id="loginButton">Login</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="register.html">Register</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Redirect HomeServices logo to index page
+        document.querySelector('.nav-brand').addEventListener('click', (event) => {
+            event.preventDefault();
+            location.href = 'indx.html';
+        });
+
+        // Handle login with feedback and redirection
+        document.getElementById('loginButton').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Validate fields
+            if (!email || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                // Send login request
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Success: Notify user and redirect based on role
+                    alert(result.message || 'Login successful!');
+                    window.location.href = result.redirectUrl;
+                } else {
+                    // Failure: Notify user of error
+                    alert(result.message || 'Invalid credentials. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while logging in. Please try again later.');
+            }
+        });
+    </script>
+</body>
+</html>

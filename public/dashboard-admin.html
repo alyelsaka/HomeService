@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - HomeServices</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <!-- Navigation Bar -->
+    <nav class="dashboard-nav">
+        <div class="nav-brand" onclick="location.href='index.html'">HomeServices</div>
+        <div class="admin-info">
+            <span id="adminName">Welcome, <span id="adminNamePlaceholder">Loading...</span></span>
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="profile-section">
+                <div class="profile-image">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="admin-status">
+                    <span id="currentStatus" class="status-badge active">Active</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="showSection('accounts')">
+                    <i class="fas fa-users"></i> Account Management
+                </button>
+                <button class="nav-item" onclick="showSection('workerVerification')">
+                    <i class="fas fa-id-card"></i> Worker Verification
+                </button>
+                <button class="nav-item" onclick="showSection('serviceManagement')">
+                    <i class="fas fa-cogs"></i> Service Management
+                </button>
+                <button class="nav-item" onclick="showSection('systemMonitoring')">
+                    <i class="fas fa-chart-line"></i> System Monitoring
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Account Management Section -->
+            <section id="accounts" class="dashboard-section active">
+                <h2>Account Management</h2>
+                <div id="accountsContainer" class="accounts-grid">
+                    <p>Loading account data...</p>
+                </div>
+            </section>
+
+            <!-- Worker Verification Section -->
+            <section id="workerVerification" class="dashboard-section">
+                <h2>Worker Verification</h2>
+                <div id="pending-workers-container" class="pending-workers-container">
+                    <p>Loading pending workers...</p>
+                </div>
+            </section>
+
+            <!-- Service Management Section -->
+            <section id="serviceManagement" class="dashboard-section">
+                <h2>Service Management</h2>
+                <div id="servicesContainer" class="services-container">
+                    <p>Loading services...</p>
+                </div>
+            </section>
+
+            <!-- System Monitoring Section -->
+            <section id="systemMonitoring" class="dashboard-section">
+                <h2>System Monitoring</h2>
+                <div id="monitoringContainer" class="monitoring-container">
+                    <p>Loading system data...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="dashboard-footer">
+        <p>Contact us: support@homeservices.com | +123 456 7890</p>
+        <div class="social-media">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        // Show the selected section
+        function showSection(sectionId) {
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Example: Fetch account data
+        async function loadAccounts() {
+            const container = document.getElementById('accountsContainer');
+            container.innerHTML = '<p>Loading account data...</p>';
+            try {
+                const response = await fetch('/admin/accounts');
+                const data = await response.json();
+                container.innerHTML = ''; // Clear existing content
+                data.forEach(account => {
+                    const card = document.createElement('div');
+                    card.classList.add('account-card');
+                    card.innerHTML = `
+                        <div class="account-header">
+                            <h3>${account.type} Accounts</h3>
+                        </div>
+                        <div class="account-details">
+                            <p><i class="fas fa-user"></i> Total: ${account.total}</p>
+                            <p><i class="fas fa-clock"></i> Last Updated: ${account.lastUpdated}</p>
+                        </div>
+                        <div class="account-actions">
+                            <button class="manage-btn">Manage</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading account data:', error);
+            }
+        }
+
+        // Example: Fetch worker verification data
+        async function loadWorkerVerifications() {
+            const container = document.getElementById('verificationContainer');
+            container.innerHTML = '<p>Loading pending verifications...</p>';
+            try {
+                const response = await fetch('/admin/verifications');
+                const data = await response.json();
+                container.innerHTML = ''; // Clear existing content
+                data.forEach(verification => {
+                    const card = document.createElement('div');
+                    card.classList.add('verification-card');
+                    card.innerHTML = `
+                        <div class="verification-header">
+                            <h3>${verification.workerName}</h3>
+                        </div>
+                        <div class="verification-details">
+                            <p><i class="fas fa-user"></i> Worker: ${verification.workerName}</p>
+                            <p><i class="fas fa-id-card"></i> ID Submitted: ${verification.idSubmitted}</p>
+                            <p><i class="fas fa-file"></i> Documents: ${verification.documents}</p>
+                        </div>
+                        <div class="verification-actions">
+                            <button class="verify-btn" onclick="verifyWorker(${verification.id})">Verify</button>
+                            <button class="reject-btn" onclick="rejectWorker(${verification.id})">Reject</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading verification data:', error);
+            }
+        }
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAccounts();
+            loadWorkerVerifications();
+        });
+    </script>
+
+    <!-- Include the admin-dashboard.js file at the end of the body -->
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>

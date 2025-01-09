@@ -409,50 +409,50 @@
         }
 
         // Book a service
-        async function bookService(serviceId, workerId) {
-            try {
-                const requestBody = {
-                    service_id: serviceId,
-                    worker_id: workerId,
-                    booking_date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
-                    start_time: '09:00', // Default start time
-                    end_time: '17:00',   // Default end time
-                    rate_per_hour: 50    // Default rate per hour
-                };
+      // Book a service
+async function bookService(serviceId, workerId) {
+    try {
+        const requestBody = {
+            service_id: serviceId,
+            worker_id: workerId,
+            booking_date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
+            start_time: '09:00', // Default start time
+            end_time: '17:00',   // Default end time
+            rate_per_hour: 50    // Default rate per hour
+        };
 
-                console.log('Request Body:', requestBody); // Log the request body
+        console.log('Request Body:', requestBody); // Log the request body
 
-                const response = await fetch('/api/bookings', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
 
-                const result = await response.json();
+        const result = await response.json();
 
-                if (response.ok) {
-                    alert(result.message || 'Service booked successfully!');
+        if (response.ok) {
+            alert(result.message || 'Service booked successfully!');
 
-                    // Remove the booked service from the DOM
-                    const serviceCard = document.querySelector(`.service-card[data-service-id="${serviceId}"]`);
-                    if (serviceCard) {
-                        serviceCard.remove();
-                    }
-
-                    loadBookings(); // Refresh the bookings list
-                } else {
-                    console.error('Booking failed:', result); // Log the error response
-                    alert(result.message || 'Failed to book service.');
-                }
-            } catch (error) {
-                console.error('Error booking service:', error); // Log the full error
-                alert('An error occurred while booking the service.');
+            // Remove the booked service from the DOM
+            const serviceCard = document.querySelector(`.service-card[data-service-id="${serviceId}"]`);
+            if (serviceCard) {
+                serviceCard.remove();
             }
-        }
 
+            loadBookings(); // Refresh the bookings list
+        } else {
+            console.error('Booking failed:', result); // Log the error response
+            alert(result.message || 'Failed to book service.');
+        }
+    } catch (error) {
+        console.error('Error booking service:', error); // Log the full error
+        alert('An error occurred while booking the service.');
+    }
+}
         // Fetch client bookings
         async function loadBookings() {
             try {
@@ -482,27 +482,26 @@
 
         // Cancel a booking
         async function cancelBooking(bookingId) {
-            try {
-                const response = await fetch(`/bookings/cancel/${bookingId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
+    try {
+        const response = await fetch(`/bookings/cancel/${bookingId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
 
-                const result = await response.json(); // Parse the response as JSON
+        const result = await response.json(); // Parse the response as JSON
 
-                if (response.ok) {
-                    alert(result.message || 'Booking canceled successfully!');
-                    loadBookings(); // Refresh the bookings list
-                } else {
-                    alert(result.message || 'Failed to cancel booking.');
-                }
-            } catch (error) {
-                console.error('Error canceling booking:', error);
-                alert('An error occurred while canceling the booking.');
-            }
+        if (response.ok) {
+            alert(result.message || 'Booking canceled successfully!');
+            loadBookings(); // Refresh the bookings list
+        } else {
+            alert(result.message || 'Failed to cancel booking.');
         }
-
-        // Reschedule a booking
+    } catch (error) {
+        console.error('Error canceling booking:', error);
+        alert('An error occurred while canceling the booking.');
+    }
+}
+        // Reschedule a booking (placeholder function)
         async function rescheduleBooking(bookingId) {
             try {
                 const newDate = prompt('Enter the new date (YYYY-MM-DD):');

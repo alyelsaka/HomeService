@@ -6,94 +6,173 @@
     <title>Worker Dashboard - HomeServices</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Language selector styling */
+        .language-selector {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        #language-selector {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            font-size: 16px;
+        }
+
+        /* RTL support for Arabic */
+        body[dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Your existing CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="time"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .message, .error {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .services-list {
+            margin-top: 20px;
+        }
+
+        .service-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .loading {
+            color: #666;
+        }
+    </style>
 </head>
 <body class="dashboard-body">
+    <!-- Navigation Bar -->
     <nav class="dashboard-nav">
-        <div class="nav-brand" onclick="location.href='index.html'">HomeServices</div>
-        <div class="worker-info">
-            <span id="workerName">Welcome, <span id="workerNamePlaceholder">Loading...</span></span>
+        <div class="nav-brand" onclick="location.href='index.html'" data-translate="home">HomeServices</div>
+        <div class="admin-info">
+            <span id="adminName" data-translate="welcome">Welcome, <span id="adminNamePlaceholder">Loading...</span></span>
             <button onclick="logout()" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> <span data-translate="logout">Logout</span>
             </button>
         </div>
     </nav>
 
+    <!-- Dashboard Container -->
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="dashboard-sidebar">
-            <div class="profile-section">
-                <div class="profile-image">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="worker-status">
-                    <span id="currentStatus" class="status-badge available">Available</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <button class="nav-item active" onclick="showSection('bookings')">
-                    <i class="fas fa-calendar-check"></i> Current Bookings
-                </button>
-                <button class="nav-item" onclick="showSection('availability')">
-                    <i class="fas fa-clock"></i> Availability
-                </button>
-                <button class="nav-item" onclick="showSection('notifications')">
-                    <i class="fas fa-bell"></i> Notifications
-                    <span class="notification-badge" id="notificationCount">0</span>
-                </button>
-            </nav>
-        </aside>
-
         <!-- Main Content -->
         <main class="dashboard-main">
-            <!-- Current Bookings Section -->
-            <section id="bookings" class="dashboard-section active">
-                <h2>Current Bookings</h2>
-                <div id="bookingsContainer" class="bookings-grid">
-                    <p>Loading bookings...</p>
-                </div>
-            </section>
+            <div class="container">
+                <h2 data-translate="addService">Add a New Service</h2>
+                <form id="add-service-form">
+                    <!-- Hidden input for worker ID -->
+                    <input type="hidden" id="worker-id" name="worker-id">
 
-            <!-- Availability Management Section -->
-            <section id="availability" class="dashboard-section">
-                <h2>Manage Availability</h2>
-                <div class="availability-container">
-                    <div class="availability-status">
-                        <h3>Current Status</h3>
-                        <div class="status-toggle">
-                            <label class="switch">
-                                <input type="checkbox" id="availabilityToggle" checked>
-                                <span class="slider round"></span>
-                            </label>
-                            <span id="availabilityText">Available for Work</span>
-                        </div>
-                    </div>
+                    <label for="service-name" data-translate="serviceName">Service Name:</label>
+                    <input type="text" id="service-name" name="service-name" required>
 
-                    <div id="availability-form-container">
-                        <form id="availability-form" class="availability-form">
-                            <h3>Set Your Availability</h3>
-                            <label for="start-time">Start Time:</label>
-                            <input type="time" id="start-time" required>
-                            <label for="end-time">End Time:</label>
-                            <input type="time" id="end-time" required>
-                            <button type="submit" class="save-availability-btn">Update Availability</button>
-                        </form>
-                    </div>
-                </div>
-            </section>
+                    <label for="service-price" data-translate="servicePrice">Price ($):</label>
+                    <input type="number" id="service-price" name="service-price" step="0.01" required>
 
-            <!-- Notifications Section -->
-            <section id="notifications" class="dashboard-section">
-                <h2>Notifications</h2>
-                <div id="notificationsContainer" class="notifications-container">
-                    <p>No new notifications.</p>
+                    <label for="availability-start" data-translate="availabilityStart">Availability Start Time:</label>
+                    <input type="time" id="availability-start" name="availability-start" required>
+
+                    <label for="availability-end" data-translate="availabilityEnd">Availability End Time:</label>
+                    <input type="time" id="availability-end" name="availability-end" required>
+
+                    <label for="service-description" data-translate="serviceDescription">Description:</label>
+                    <textarea id="service-description" name="service-description" rows="4" required></textarea>
+
+                    <button type="submit" id="submit-button" data-translate="addServiceButton">Add Service</button>
+                </form>
+                <div class="message" id="message"></div>
+                <div class="error" id="error"></div>
+            </div>
+
+            <div class="services-list">
+                <h3 data-translate="myServices">My Services</h3>
+                <div id="services-container">
+                    <p class="loading" data-translate="loadingServices">Loading services...</p>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 
+    <!-- Footer -->
     <footer class="dashboard-footer">
-        <p>Contact us: support@homeservices.com | +123 456 7890</p>
+        <p data-translate="contactUs">Contact us: support@homeservices.com | +123 456 7890</p>
         <div class="social-media">
             <a href="#"><i class="fab fa-facebook"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
@@ -101,118 +180,409 @@
         </div>
     </footer>
 
-    <!-- Connect JavaScript -->
-    <script src="worker-dashboard.js"></script>
-</body>
-</html>
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="language-selector" onchange="changeLanguage(this.value)">
+            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 中文 (Chinese)</option>
+            <option value="es">🇪🇸 Español (Spanish)</option>
+            <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+            <option value="ar">🇸🇦 العربية (Arabic)</option>
+            <option value="pt">🇵🇹 Português (Portuguese)</option>
+            <option value="bn">🇧🇩 বাংলা (Bengali)</option>
+            <option value="ru">🇷🇺 Русский (Russian)</option>
+            <option value="ja">🇯🇵 日本語 (Japanese)</option>
+            <option value="pa">🇮🇳 ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="de">🇩🇪 Deutsch (German)</option>
+            <option value="fr">🇫🇷 Français (French)</option>
+        </select>
+    </div>
 
     <script>
-        function showSection(sectionId) {
-            // Hide all sections
-            document.querySelectorAll('.dashboard-section').forEach(section => {
-                section.classList.remove('active');
+        // Define translations for all supported languages
+        const translations = {
+            en: {
+                home: "HomeServices",
+                welcome: "Welcome",
+                logout: "Logout",
+                addService: "Add a New Service",
+                serviceName: "Service Name:",
+                servicePrice: "Price ($):",
+                availabilityStart: "Availability Start Time:",
+                availabilityEnd: "Availability End Time:",
+                serviceDescription: "Description:",
+                addServiceButton: "Add Service",
+                myServices: "My Services",
+                loadingServices: "Loading services...",
+                contactUs: "Contact us: support@homeservices.com | +123 456 7890"
+            },
+            zh: {
+                home: "家庭服务",
+                welcome: "欢迎",
+                logout: "登出",
+                addService: "添加新服务",
+                serviceName: "服务名称：",
+                servicePrice: "价格（$）：",
+                availabilityStart: "开始时间：",
+                availabilityEnd: "结束时间：",
+                serviceDescription: "描述：",
+                addServiceButton: "添加服务",
+                myServices: "我的服务",
+                loadingServices: "正在加载服务...",
+                contactUs: "联系我们：support@homeservices.com | +123 456 7890"
+            },
+            es: {
+                home: "Servicios del Hogar",
+                welcome: "Bienvenido",
+                logout: "Cerrar sesión",
+                addService: "Agregar Nuevo Servicio",
+                serviceName: "Nombre del Servicio:",
+                servicePrice: "Precio ($):",
+                availabilityStart: "Hora de Inicio:",
+                availabilityEnd: "Hora de Fin:",
+                serviceDescription: "Descripción:",
+                addServiceButton: "Agregar Servicio",
+                myServices: "Mis Servicios",
+                loadingServices: "Cargando servicios...",
+                contactUs: "Contáctenos: support@homeservices.com | +123 456 7890"
+            },
+            hi: {
+                home: "होम सर्विसेज",
+                welcome: "स्वागत है",
+                logout: "लॉगआउट",
+                addService: "नई सेवा जोड़ें",
+                serviceName: "सेवा का नाम:",
+                servicePrice: "मूल्य ($):",
+                availabilityStart: "उपलब्धता प्रारंभ समय:",
+                availabilityEnd: "उपलब्धता समाप्ति समय:",
+                serviceDescription: "विवरण:",
+                addServiceButton: "सेवा जोड़ें",
+                myServices: "मेरी सेवाएं",
+                loadingServices: "सेवाएं लोड हो रही हैं...",
+                contactUs: "संपर्क करें: support@homeservices.com | +123 456 7890"
+            },
+            ar: {
+                home: "خدمات المنزل",
+                welcome: "مرحباً",
+                logout: "تسجيل الخروج",
+                addService: "إضافة خدمة جديدة",
+                serviceName: "اسم الخدمة:",
+                servicePrice: "السعر ($):",
+                availabilityStart: "وقت بدء التوفر:",
+                availabilityEnd: "وقت انتهاء التوفر:",
+                serviceDescription: "الوصف:",
+                addServiceButton: "إضافة خدمة",
+                myServices: "خدماتي",
+                loadingServices: "جاري تحميل الخدمات...",
+                contactUs: "اتصل بنا: support@homeservices.com | +123 456 7890"
+            },
+            pt: {
+                home: "Serviços Domésticos",
+                welcome: "Bem-vindo",
+                logout: "Sair",
+                addService: "Adicionar Novo Serviço",
+                serviceName: "Nome do Serviço:",
+                servicePrice: "Preço ($):",
+                availabilityStart: "Hora de Início:",
+                availabilityEnd: "Hora de Término:",
+                serviceDescription: "Descrição:",
+                addServiceButton: "Adicionar Serviço",
+                myServices: "Meus Serviços",
+                loadingServices: "Carregando serviços...",
+                contactUs: "Contate-nos: support@homeservices.com | +123 456 7890"
+            },
+            bn: {
+                home: "হোম সার্ভিসেস",
+                welcome: "স্বাগতম",
+                logout: "লগআউট",
+                addService: "নতুন সেবা যোগ করুন",
+                serviceName: "সেবার নাম:",
+                servicePrice: "মূল্য ($):",
+                availabilityStart: "উপলব্ধতার শুরুর সময়:",
+                availabilityEnd: "উপলব্ধতার শেষ সময়:",
+                serviceDescription: "বিবরণ:",
+                addServiceButton: "সেবা যোগ করুন",
+                myServices: "আমার সেবাসমূহ",
+                loadingServices: "সেবাসমূহ লোড হচ্ছে...",
+                contactUs: "যোগাযোগ করুন: support@homeservices.com | +123 456 7890"
+            },
+            ru: {
+                home: "Домашние Услуги",
+                welcome: "Добро пожаловать",
+                logout: "Выйти",
+                addService: "Добавить Новую Услугу",
+                serviceName: "Название Услуги:",
+                servicePrice: "Цена ($):",
+                availabilityStart: "Время Начала:",
+                availabilityEnd: "Время Окончания:",
+                serviceDescription: "Описание:",
+                addServiceButton: "Добавить Услугу",
+                myServices: "Мои Услуги",
+                loadingServices: "Загрузка услуг...",
+                contactUs: "Свяжитесь с нами: support@homeservices.com | +123 456 7890"
+            },
+            ja: {
+                home: "ホームサービス",
+                welcome: "ようこそ",
+                logout: "ログアウト",
+                addService: "新規サービス追加",
+                serviceName: "サービス名:",
+                servicePrice: "料金 ($):",
+                availabilityStart: "開始時間:",
+                availabilityEnd: "終了時間:",
+                serviceDescription: "説明:",
+                addServiceButton: "サービスを追加",
+                myServices: "マイサービス",
+                loadingServices: "サービスを読み込み中...",
+                contactUs: "お問い合わせ: support@homeservices.com | +123 456 7890"
+            },
+            pa: {
+                home: "ਘਰ ਸੇਵਾਵਾਂ",
+                welcome: "ਜੀ ਆਇਆਂ ਨੂੰ",
+                logout: "ਲੌਗਆਉਟ",
+                addService: "ਨਵੀਂ ਸੇਵਾ ਸ਼ਾਮਲ ਕਰੋ",
+                serviceName: "ਸੇਵਾ ਦਾ ਨਾਮ:",
+                servicePrice: "ਕੀਮਤ ($):",
+                availabilityStart: "ਉਪਲਬਧਤਾ ਸ਼ੁਰੂ ਸਮਾਂ:",
+                availabilityEnd: "ਉਪਲਬਧਤਾ ਅੰਤ ਸਮਾਂ:",
+                serviceDescription: "ਵੇਰਵਾ:",
+                addServiceButton: "ਸੇਵਾ ਸ਼ਾਮਲ ਕਰੋ",
+                myServices: "ਮੇਰੀਆਂ ਸੇਵਾਵਾਂ",
+                loadingServices: "ਸੇਵਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ...",
+                contactUs: "ਸੰਪਰਕ ਕਰੋ: support@homeservices.com | +123 456 7890"
+            },
+            de: {
+                home: "Hausdienstleistungen",
+                welcome: "Willkommen",
+                logout: "Abmelden",
+                addService: "Neue Dienstleistung Hinzufügen",
+                serviceName: "Dienstleistungsname:",
+                servicePrice: "Preis ($):",
+                availabilityStart: "Verfügbarkeit Beginn:",
+                availabilityEnd: "Verfügbarkeit Ende:",
+                serviceDescription: "Beschreibung:",
+                addServiceButton: "Dienstleistung Hinzufügen",
+                myServices: "Meine Dienstleistungen",
+                loadingServices: "Dienstleistungen werden geladen...",
+                contactUs: "Kontakt: support@homeservices.com | +123 456 7890"
+            },
+            fr: {
+                home: "Services à Domicile",
+                welcome: "Bienvenue",
+                logout: "Déconnexion",
+                addService: "Ajouter un Nouveau Service",
+                serviceName: "Nom du Service:",
+                servicePrice: "Prix ($):",
+                availabilityStart: "Heure de Début:",
+                availabilityEnd: "Heure de Fin:",
+                serviceDescription: "Description:",
+                addServiceButton: "Ajouter le Service",
+                myServices: "Mes Services",
+                loadingServices: "Chargement des services...",
+                contactUs: "Contactez-nous: support@homeservices.com | +123 456 7890"
+            }
+        };
+
+        // Function to change language
+        function changeLanguage(language) {
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[language] && translations[language][key]) {
+                    element.textContent = translations[language][key];
+                }
             });
-            // Show selected section
-            document.getElementById(sectionId).classList.add('active');
-            
-            // Update navigation highlighting
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
+
+            // Update text direction for RTL languages (e.g., Arabic)
+            if (language === "ar") {
+                document.body.setAttribute("dir", "rtl");
+            } else {
+                document.body.setAttribute("dir", "ltr");
+            }
         }
 
-        // Toggle availability status
-        document.getElementById('availabilityToggle').addEventListener('change', function (e) {
-            const statusBadge = document.getElementById('currentStatus');
-            const availabilityText = document.getElementById('availabilityText');
-            if (e.target.checked) {
-                statusBadge.className = 'status-badge available';
-                statusBadge.textContent = 'Available';
-                availabilityText.textContent = 'Available for Work';
-            } else {
-                statusBadge.className = 'status-badge unavailable';
-                statusBadge.textContent = 'Unavailable';
-                availabilityText.textContent = 'Not Available';
+        // Initialize with default language (English)
+        document.addEventListener('DOMContentLoaded', () => {
+            changeLanguage('en');
+        });
+
+        // Function to fetch the worker's ID based on the logged-in user's email
+        async function fetchWorkerId() {
+            try {
+                console.log('Fetching worker ID...');
+                const response = await fetch('/auth/user', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Worker ID fetched successfully:', data.user.id);
+                    // Set the worker ID in the hidden input field
+                    document.getElementById('worker-id').value = data.user.id;
+                    return data.user.id; // Return the worker ID
+                } else {
+                    console.error('Failed to fetch worker ID:', data.message);
+                    document.getElementById('error').textContent = 'Failed to fetch worker ID.';
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching worker ID:', error);
+                document.getElementById('error').textContent = 'Error fetching worker ID.';
+                return null;
+            }
+        }
+
+        // Function to fetch and display the worker's services
+        async function fetchWorkerServices() {
+            try {
+                console.log('Fetching worker services...');
+                const workerId = document.getElementById('worker-id').value;
+                const response = await fetch(`/api/worker/services?worker_id=${workerId}`);
+                const data = await response.json();
+
+                const servicesContainer = document.getElementById('services-container');
+                servicesContainer.innerHTML = ''; // Clear existing content
+
+                if (response.ok) {
+                    console.log('Services fetched successfully:', data);
+                    if (data.length > 0) {
+                        data.forEach(service => {
+                            const serviceItem = document.createElement('div');
+                            serviceItem.className = 'service-item';
+                            serviceItem.innerHTML = `
+                                <strong>${service.name}</strong><br>
+                                Price: $${service.price}<br>
+                                Availability: ${service.availability_start} - ${service.availability_end}<br>
+                                Status: ${service.status}<br>
+                                Description: ${service.description}
+                            `;
+                            servicesContainer.appendChild(serviceItem);
+                        });
+                    } else {
+                        servicesContainer.innerHTML = '<p>No services found.</p>';
+                    }
+                } else {
+                    console.error('Failed to fetch services:', data.message);
+                    servicesContainer.innerHTML = '<p class="error">Failed to fetch services. Please try again.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching services:', error);
+                document.getElementById('services-container').innerHTML = '<p class="error">An error occurred while fetching services.</p>';
+            }
+        }
+
+        // Handle form submission to add a new service
+        document.getElementById('add-service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true; // Disable the button to prevent multiple submissions
+
+            const workerId = document.getElementById('worker-id').value;
+            const serviceName = document.getElementById('service-name').value;
+            const servicePrice = document.getElementById('service-price').value;
+            const availabilityStart = document.getElementById('availability-start').value;
+            const availabilityEnd = document.getElementById('availability-end').value;
+            const serviceDescription = document.getElementById('service-description').value;
+
+            // Ensure all fields are filled
+            if (!serviceName || !servicePrice || !availabilityStart || !availabilityEnd || !serviceDescription) {
+                document.getElementById('error').textContent = 'All fields are required.';
+                submitButton.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/worker/services', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        worker_id: workerId,
+                        rate_per_hour: servicePrice,
+                        availability_start: availabilityStart,
+                        availability_end: availabilityEnd,
+                        description: serviceDescription,
+                        is_active: 1 // Default to active
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('message').textContent = 'Service added successfully!';
+                    document.getElementById('error').textContent = '';
+
+                    // Clear the form fields
+                    document.getElementById('add-service-form').reset();
+
+                    // Refresh the list of services
+                    fetchWorkerServices();
+                } else {
+                    document.getElementById('error').textContent = data.message || 'Failed to add service.';
+                    document.getElementById('message').textContent = '';
+                }
+            } catch (error) {
+                console.error('Error adding service:', error);
+                document.getElementById('error').textContent = 'Failed to add service due to an error.';
+                document.getElementById('message').textContent = '';
+            } finally {
+                submitButton.disabled = false; // Re-enable the button
             }
         });
 
-        function loadBookings() {
-            const container = document.getElementById('bookingsContainer');
-            container.innerHTML = '<p>Loading bookings...</p>';
-            fetch('/worker/bookings')
-                .then(response => response.json())
-                .then(bookings => {
-                    container.innerHTML = '';
-                    if (bookings.length === 0) {
-                        container.innerHTML = '<p>No current bookings.</p>';
-                        return;
-                    }
-                    bookings.forEach(booking => {
-                        const card = document.createElement('div');
-                        card.classList.add('booking-card');
-                        card.innerHTML = `
-                            <div class="booking-header">
-                                <h3>${booking.serviceType}</h3>
-                                <span class="booking-status ${booking.status}">${booking.status}</span>
-                            </div>
-                            <div class="booking-details">
-                                <p><i class="fas fa-user"></i> Client: ${booking.clientName}</p>
-                                <p><i class="fas fa-map-marker-alt"></i> Location: ${booking.location}</p>
-                                <p><i class="fas fa-calendar"></i> Date: ${booking.date}</p>
-                                <p><i class="fas fa-clock"></i> Time: ${booking.time}</p>
-                            </div>
-                            <div class="booking-actions">
-                                <button class="accept-btn" onclick="acceptBooking(${booking.id})">Accept</button>
-                                <button class="decline-btn" onclick="declineBooking(${booking.id})">Decline</button>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
-                })
-                .catch(error => console.error('Error loading bookings:', error));
+        // Logout function
+        async function logout() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('No token found. You are already logged out.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                const response = await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Ensure cookies are sent with the request
+                });
+
+                if (response.ok) {
+                    localStorage.removeItem('token'); // Clear the token from localStorage
+                    window.location.href = '/login.html'; // Redirect to the login page
+                } else {
+                    const result = await response.json();
+                    alert(result.message || 'Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('An error occurred while logging out.');
+            }
         }
 
-        function logout() {
-            fetch('/auth/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            })
-                .then(() => {
-                    window.location.href = '/login.html';
-                })
-                .catch(err => console.error('Logout failed:', err));
-        }
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM fully loaded and parsed');
+            // Fetch the worker's ID based on the logged-in user's email
+            const workerId = await fetchWorkerId();
+
+            if (workerId) {
+                console.log('Worker ID found:', workerId);
+                // Set the worker ID in the hidden input field
+                document.getElementById('worker-id').value = workerId;
+
+                // Fetch and display the worker's services
+                fetchWorkerServices();
+            } else {
+                console.error('Failed to fetch worker ID.');
+                document.getElementById('error').textContent = 'Failed to fetch worker ID.';
+            }
+        });
     </script>
 </body>
 </html>
-async function logout() {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('No token found. You are already logged out.');
-            window.location.href = '/login.html';
-            return;
-        }
-
-        const response = await fetch('/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include', // Ensure cookies are sent with the request
-        });
-
-        if (response.ok) {
-            localStorage.removeItem('token'); // Clear the token from localStorage
-            window.location.href = '/login.html'; // Redirect to the login page
-        } else {
-            const result = await response.json();
-            alert(result.message || 'Logout failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error during logout:', error);
-        alert('An error occurred while logging out.');
-    }
-}

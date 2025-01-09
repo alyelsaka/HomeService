@@ -1,14 +1,24 @@
-// Updated Server.js with full connectivity
-require('dotenv').config();
 const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const path = require('path');
 const db = require('./config/database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const app = express();
+
+// Middleware and setup
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5002',
+    credentials: true,
+}));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Ensure all required environment variables are present
 const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'JWT_SECRET'];
@@ -23,148 +33,191 @@ console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_PASS:', process.env.DB_PASS ? '********' : 'Not Set');
 console.log('DB_NAME:', process.env.DB_NAME);
-console.log('PORT:', process.env.PORT || 3000);
+console.log('PORT:', process.env.PORT || 5002);
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? '********' : 'Not Set');
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:3000');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'http://localhost:5002');
 
-// Middleware
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// Import routes
+const authRoutes = require('./routes/auth');
+const apiRoutes = require('./routes/api');
 
-// Helper Functions
-function authenticateRole(role) {
-    return (req, res, next) => {
-        const token = req.cookies.token;
-        if (!token) {
-            return res.status(401).json({ message: 'Unauthorized' });
+// Use routes
+app.use('/auth', authRoutes);
+app.use('/api', apiRoutes); // Mount API routes under /api
+
+// Authentication Middleware
+const authenticate = (req, res, next) => {
+    const token = req.cookies.token || req.headers.authorization?.split(' ')[1]; // Get token from cookie or header
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('Token verification failed:', err); // Debugging
+            return res.status(403).json({ message: 'Forbidden' });
         }
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) return res.status(403).json({ message: 'Forbidden' });
-            if (user.userType !== role) return res.status(403).json({ message: 'Forbidden' });
-            req.user = user;
-            next();
-        });
-    };
-}
+        req.user = user;
+        next();
+    });
+};
 
-// Root Route: Serve default index.html
+// Root Route
 app.get('/', (req, res) => {
-    const filePath = path.join(__dirname, 'public', 'indx.html');
+    const filePath = path.join(__dirname, 'public', 'index.html');
     res.sendFile(filePath, (err) => {
         if (err) {
-            console.error('Error serving indx.html:', err.message);
+            console.error('Error serving index.html:', err.message);
             res.status(500).send('Error loading the homepage.');
         }
     });
 });
 
-// Test database connection
-db.query('SELECT 1')
-    .then(() => {
-        console.log('Connected to the MySQL database successfully.');
+// Define the router
+const router = express.Router();
 
-        // Start the server
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
-        }).on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                console.error(`Port ${PORT} is already in use. Please use a different port.`);
-                process.exit(1);
-            } else {
-                console.error('Error starting server:', err.message);
-                process.exit(1);
-            }
+// Worker Booking Route
+router.post('/workers/book', authenticate, async (req, res) => {
+    try {
+        const { workerId, serviceId } = req.body;
+        const clientId = req.user.userId;
+
+        // Fetch worker details
+        const [worker] = await db.query(
+            `SELECT * FROM worker_profiles WHERE user_id = ?`,
+            [workerId]
+        );
+
+        if (!worker.length) {
+            return res.status(404).json({ message: 'Worker not found.' });
+        }
+
+        // Fetch service details
+        const [service] = await db.query(
+            `SELECT * FROM services WHERE id = ?`,
+            [serviceId]
+        );
+
+        if (!service.length) {
+            return res.status(404).json({ message: 'Service not found.' });
+        }
+
+        // Insert booking into the database
+        await db.query(
+            `INSERT INTO bookings (
+                service_id, client_id, worker_id, booking_date, start_time, end_time, status, service_type, rate_per_hour
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                serviceId,
+                clientId,
+                workerId,
+                new Date(),
+                worker[0].availability_start,
+                worker[0].availability_end,
+                'pending',
+                worker[0].service_type,
+                worker[0].rate_per_hour
+            ]
+        );
+
+        res.json({ message: 'Worker booked successfully!' });
+    } catch (error) {
+        console.error('Error booking worker:', error);
+        res.status(500).json({ message: 'Failed to book worker.' });
+    }
+});
+
+// Mount the router under the /api path
+app.use('/api', router);
+
+// Export the app for testing
+module.exports = app;
+
+// Start the server only if this file is run directly (not when imported)
+if (require.main === module) {
+    const PORT = process.env.PORT || 5002;
+
+    // Test database connection
+    db.query('SELECT 1')
+        .then(() => {
+            console.log('Connected to the MySQL database successfully.');
+
+            // Start the server only after the database connection is successful
+            const server = app.listen(PORT, () => {
+                console.log(`Server is running on http://localhost:${PORT}`);
+            });
+
+            // Graceful shutdown
+            process.on('SIGINT', () => {
+                console.log('\nGracefully shutting down...');
+                server.close(() => {
+                    console.log('Server has been shut down.');
+                    process.exit(0);
+                });
+            });
+
+            process.on('SIGTERM', () => {
+                console.log('\nProcess terminated.');
+                server.close(() => {
+                    console.log('Server has been shut down.');
+                    process.exit(0);
+                });
+            });
+        })
+        .catch((err) => {
+            console.error('Error connecting to the database:', err.message);
+            process.exit(1);
         });
-    })
-    .catch((err) => {
-        console.error('Error connecting to the database:', err.message);
-        process.exit(1);
-    });
+}
 
 // Authentication Routes
 app.post('/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // Validate input
         if (!email || !password) {
             return res.status(400).json({ message: 'Email and password are required.' });
         }
 
-        // Retrieve user from database
         const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length === 0) {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
         const user = users[0];
-
-        // Verify password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             { userId: user.id, userType: user.user_type },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // Set cookie with the token
+        // Set the token in a cookie
         res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000
+            httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+            secure: process.env.NODE_ENV === 'production', // Ensure cookies are only sent over HTTPS in production
+            sameSite: 'strict', // Prevent CSRF attacks
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
         });
 
-        // Determine redirect URL based on user role
-        let redirectUrl;
-        switch (user.user_type) {
-            case 'admin':
-                redirectUrl = '/dashboard-admin.html';
-                break;
-            case 'worker':
-                redirectUrl = '/dashboard-worker.html';
-                break;
-            case 'client':
-                redirectUrl = '/dashboard-client.html';
-                break;
-            default:
-                redirectUrl = '/';
-        }
-
-        // Respond with success and redirect URL
-        res.json({
-            message: 'Login successful.',
-            redirectUrl,
-            user: {
-                id: user.id,
-                name: user.full_name,
-                role: user.user_type
-            }
-        });
+        // Return success response with token and user type
+        res.json({ message: 'Login successful.', token, userType: user.user_type });
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ message: 'Login failed due to an internal error.' });
+        res.status(500).json({ message: 'Login failed.' });
     }
 });
 
-// Registration Route
+// User Registration
 app.post('/auth/register', async (req, res) => {
     try {
-        const { full_name, email, password, user_type, service_type, experience_years } = req.body;
+        const { full_name, email, password, user_type, phonenumber, service_type, experience_years } = req.body;
 
         // Validate input
-        if (!full_name || !email || !password || !user_type) {
+        if (!full_name || !email || !password || !user_type || !phonenumber) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
@@ -179,29 +232,15 @@ app.post('/auth/register', async (req, res) => {
 
         // Insert new user into the database
         const [result] = await db.query(
-            'INSERT INTO users (full_name, email, password, user_type, status) VALUES (?, ?, ?, ?, ?)',
-            [
-                full_name,
-                email,
-                hashedPassword,
-                user_type,
-                user_type === 'worker' ? 'pending' : 'active' // Workers require admin approval
-            ]
+            'INSERT INTO users (full_name, email, password, user_type, phonenumber, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [full_name, email, hashedPassword, user_type, phonenumber, user_type === 'worker' ? 'pending' : 'active']
         );
 
-        // If the user is a worker, insert into worker_profiles table
+        // If the user is a worker, insert into worker_profiles
         if (user_type === 'worker') {
-            if (!service_type || !experience_years) {
-                return res.status(400).json({ message: 'Service type and experience years are required for workers.' });
-            }
-
             await db.query(
                 'INSERT INTO worker_profiles (user_id, service_type, experience_years) VALUES (?, ?, ?)',
-                [
-                    result.insertId, // Get the newly inserted user ID
-                    service_type,
-                    experience_years
-                ]
+                [result.insertId, service_type, experience_years]
             );
         }
 
@@ -214,160 +253,291 @@ app.post('/auth/register', async (req, res) => {
     }
 });
 
-// Admin Routes
-app.get('/admin/verifications', authenticateRole('admin'), async (req, res) => {
+// Fetch logged-in user's details
+app.get('/auth/user', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const [user] = await db.query('SELECT id, full_name AS name, email, user_type FROM users WHERE id = ?', [userId]);
+        if (user.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.json({ user: user[0] });
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ message: 'Failed to fetch user data.' });
+    }
+});
+
+// Fetch available workers
+app.get('/auth/workers/available', authenticate, async (req, res) => {
     try {
         const [workers] = await db.query(
-            'SELECT id, full_name, email FROM users WHERE user_type = ? AND status = ?',
-            ['worker', 'pending']
+            `SELECT 
+                users.id, 
+                users.full_name, 
+                users.email, 
+                worker_profiles.service_type, 
+                worker_profiles.rate_per_hour, 
+                worker_profiles.availability_start, 
+                worker_profiles.availability_end
+            FROM users
+            JOIN worker_profiles ON users.id = worker_profiles.user_id
+            WHERE users.user_type = 'worker' AND users.status = 'active'`
         );
+        console.log('Workers Data:', workers); // Debugging: Log the fetched data
         res.json(workers);
     } catch (error) {
-        console.error('Verification Fetch Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error fetching workers:', error);
+        res.status(500).json({ message: 'Failed to fetch workers.' });
     }
 });
 
-
-app.post('/admin/approve-worker', authenticateRole('admin'), async (req, res) => {
+// Fetch available services
+app.get('/auth/services/available', authenticate, async (req, res) => {
     try {
-        const { workerId } = req.body;
-        await db.query('UPDATE users SET approved = 1 WHERE id = ?', [workerId]);
-        res.json({ message: 'Worker approved successfully' });
-    } catch (error) {
-        console.error('Worker Approval Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-// Client Routes
-app.get('/api/services', async (req, res) => {
-    try {
-        const [services] = await db.query('SELECT id, name, price, rating, booked FROM services WHERE booked = 0');
+        const [services] = await db.query(
+            `SELECT services.id, services.name, services.price, users.full_name AS worker_name
+            FROM services
+            JOIN users ON services.worker_id = users.id
+            WHERE services.status = 'available'`
+        );
         res.json(services);
     } catch (error) {
         console.error('Error fetching services:', error);
-        res.status(500).json({ message: 'Failed to fetch services from the database.' });
+        res.status(500).json({ message: 'Failed to fetch services.' });
     }
 });
 
-app.post('/services/book', authenticateRole('client'), async (req, res) => {
+// Fetch client bookings
+app.get('/bookings', authenticate, async (req, res) => {
     try {
-        const { serviceId } = req.body;
         const clientId = req.user.userId;
 
-        // Mark service as booked
-        await db.query(
-            'UPDATE services SET status = ?, booked_by = ? WHERE id = ?',
-            ['booked', clientId, serviceId]
+        const [bookings] = await db.query(
+            `SELECT bookings.id, services.name AS service, bookings.booking_date AS date, bookings.start_time, bookings.end_time, bookings.rate_per_hour AS price
+            FROM bookings
+            JOIN services ON bookings.service_id = services.id
+            WHERE bookings.client_id = ?`,
+            [clientId]
         );
-        res.json({ message: 'Service booked successfully' });
-    } catch (error) {
-        console.error('Service Booking Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-app.get('/admin/reports', authenticateRole('admin'), async (req, res) => {
-    try {
-        const [reports] = await db.query('SELECT id, title, description FROM system_reports');
-        res.json(reports);
-    } catch (error) {
-        console.error('System Reports Fetch Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
 
-
-// Worker Routes
-app.get('/worker/bookings', authenticateRole('worker'), async (req, res) => {
-    try {
-        const workerId = req.user.userId;
-        const [bookings] = await db.query('SELECT * FROM services WHERE booked = 1 AND worker_id = ?', [workerId]);
         res.json(bookings);
     } catch (error) {
-        console.error('Worker Bookings Fetch Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ message: 'Failed to fetch bookings.' });
     }
 });
-
-app.post('/worker/availability', authenticateRole('worker'), async (req, res) => {
+// Password Reset Endpoint
+app.post('/auth/reset-password', async (req, res) => {
     try {
-        const { availability } = req.body;
-        const workerId = req.user.workerId; // Example correction
+        const { email, phonenumber, newPassword } = req.body;
 
-erId;
-
-        // Update worker availability
-        await db.query('UPDATE users SET availability = ? WHERE id = ?', [availability, workerId]);
-        res.json({ message: 'Availability updated successfully' });
-    } catch (error) {
-        console.error('Worker Availability Update Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-
-// Payment Endpoints
-app.post('/payments/process', async (req, res) => {
-    try {
-        const { cardNumber, expiryDate, cvv, amount, bookingId } = req.body;
-
-        // Validate payment details
-        if (!cardNumber || !expiryDate || !cvv || !amount || !bookingId) {
-            return res.status(400).json({ message: 'All payment details are required.' });
+        // Validate input
+        if (!email || !phonenumber || !newPassword) {
+            return res.status(400).json({ message: 'All fields are required.' });
         }
 
-        // Simulate payment processing (replace with actual payment gateway integration)
-        const paymentSuccess = true; // Assume payment is successful for this example
-
-        if (paymentSuccess) {
-            // Update booking status to 'paid'
-            await db.query('UPDATE bookings SET status = ? WHERE id = ?', ['paid', bookingId]);
-
-            res.json({ message: 'Payment processed successfully!' });
-        } else {
-            res.status(400).json({ message: 'Payment failed. Please try again.' });
+        // Check if the user exists with the provided email and phone number
+        const [users] = await db.query('SELECT * FROM users WHERE email = ? AND phonenumber = ?', [email, phonenumber]);
+        if (users.length === 0) {
+            return res.status(404).json({ message: 'User not found or phone number does not match.' });
         }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password in the database
+        await db.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+        res.json({ message: 'Password reset successful!' });
     } catch (error) {
-        console.error('Payment processing error:', error);
-        res.status(500).json({ message: 'Payment processing failed due to an internal error.' });
+        console.error('Error resetting password:', error);
+        res.status(500).json({ message: 'Failed to reset password.' });
+    }
+});
+// Cancel a booking
+app.delete('/api/bookings/cancel/:bookingId', authenticate, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const workerId = req.user.userId; // Get the logged-in worker's ID
+
+        // Check if the booking belongs to the worker
+        const [booking] = await db.query(
+            'SELECT * FROM bookings WHERE id = ? AND worker_id = ?',
+            [bookingId, workerId]
+        );
+
+        if (!booking.length) {
+            return res.status(404).json({ message: 'Booking not found or you do not have permission to cancel it.' });
+        }
+
+        // Delete the booking
+        await db.query('DELETE FROM bookings WHERE id = ?', [bookingId]);
+
+        res.json({ message: 'Booking canceled successfully!' });
+    } catch (error) {
+        console.error('Error canceling booking:', error);
+        res.status(500).json({ message: 'Failed to cancel booking.' });
     }
 });
 
-app.post('/payments/cash', async (req, res) => {
+// Fetch client payments
+app.get('/payments', authenticate, async (req, res) => {
     try {
-        const { bookingId } = req.body;
+        const clientId = req.user.userId;
 
-        // Validate booking ID
-        if (!bookingId) {
-            return res.status(400).json({ message: 'Booking ID is required.' });
-        }
+        const [payments] = await db.query('SELECT * FROM payments WHERE service_request_id IN (SELECT id FROM service_requests WHERE client_id = ?)', [clientId]);
 
-        // Update booking status to 'pending_payment'
-        await db.query('UPDATE bookings SET status = ? WHERE id = ?', ['pending_payment', bookingId]);
-
-        res.json({ message: 'Cash payment confirmed. Payment will be collected on service.' });
+        res.json(payments);
     } catch (error) {
-        console.error('Cash payment confirmation error:', error);
-        res.status(500).json({ message: 'Cash payment confirmation failed due to an internal error.' });
+        console.error('Error fetching payments:', error);
+        res.status(500).json({ message: 'Failed to fetch payments.' });
     }
 });
 
-// Logout Route
-app.post('/auth/logout', (req, res) => {
+// Fetch client notifications
+app.get('/notifications', authenticate, async (req, res) => {
     try {
-        // Clear the token cookie
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-            sameSite: 'strict', // Prevent CSRF attacks
-        });
+        const userId = req.user.userId;
 
-        // Respond with success
-        res.json({ message: 'Logout successful.' });
+        const [notifications] = await db.query('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+
+        res.json(notifications);
     } catch (error) {
-        console.error('Logout Error:', error);
-        res.status(500).json({ message: 'Logout failed due to an internal error.' });
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: 'Failed to fetch notifications.' });
+    }
+});
+
+// Fetch reviews
+app.get('/reviews', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const [reviews] = await db.query(
+            `SELECT reviews.id, services.name AS service, reviews.rating, reviews.comment, reviews.created_at
+            FROM reviews
+            JOIN bookings ON reviews.booking_id = bookings.id
+            JOIN services ON bookings.service_id = services.id
+            WHERE bookings.client_id = ?`,
+            [userId]
+        );
+
+        res.json(reviews);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ message: 'Failed to fetch reviews.' });
+    }
+});
+
+// Admin Endpoint to Approve Workers
+app.post('/auth/admin/workers/approve/:workerId', authenticate, async (req, res) => {
+    try {
+        const { workerId } = req.params;
+        await db.query('UPDATE users SET status = "active" WHERE id = ?', [workerId]);
+        res.json({ message: 'Worker approved successfully!' });
+    } catch (error) {
+        console.error('Error approving worker:', error);
+        res.status(500).json({ message: 'Failed to approve worker.' });
+    }
+});
+
+// Reject a worker
+app.post('/auth/admin/workers/reject/:workerId', authenticate, async (req, res) => {
+    try {
+        const { workerId } = req.params;
+
+        // Use a transaction to ensure atomicity
+        await db.beginTransaction();
+
+        // Delete from worker_profiles
+        await db.query('DELETE FROM worker_profiles WHERE user_id = ?', [workerId]);
+
+        // Delete from bookings
+        await db.query('DELETE FROM bookings WHERE worker_id = ?', [workerId]);
+
+        // Delete from users
+        await db.query('DELETE FROM users WHERE id = ?', [workerId]);
+
+        await db.commit();
+
+        res.json({ message: 'Worker rejected successfully!' });
+    } catch (error) {
+        await db.rollback();
+        console.error('Error rejecting worker:', error);
+        res.status(500).json({ message: 'Failed to reject worker.' });
+    }
+});
+
+// Update worker availability
+app.post('/auth/worker/availability', authenticate, async (req, res) => {
+    try {
+        const { start, end } = req.body;
+        const userId = req.user.userId;
+
+        await db.query(
+            'UPDATE worker_profiles SET availability_start = ?, availability_end = ? WHERE user_id = ?',
+            [start, end, userId]
+        );
+
+        res.json({ message: 'Availability updated successfully!' });
+    } catch (error) {
+        console.error('Error updating availability:', error);
+        res.status(500).json({ message: 'Failed to update availability.' });
+    }
+});
+
+// Update worker rate per hour
+app.post('/auth/worker/rate', authenticate, async (req, res) => {
+    try {
+        const { rate } = req.body;
+        const userId = req.user.userId;
+
+        await db.query(
+            'UPDATE worker_profiles SET rate_per_hour = ? WHERE user_id = ?',
+            [rate, userId]
+        );
+
+        res.json({ message: 'Rate updated successfully!' });
+    } catch (error) {
+        console.error('Error updating rate:', error);
+        res.status(500).json({ message: 'Failed to update rate.' });
+    }
+});
+
+// Update worker active status
+app.post('/auth/worker/active', authenticate, async (req, res) => {
+    try {
+        const { isActive } = req.body;
+        const userId = req.user.userId;
+
+        await db.query(
+            'UPDATE worker_profiles SET is_active = ? WHERE user_id = ?',
+            [isActive, userId]
+        );
+
+        res.json({ message: 'Active status updated successfully!' });
+    } catch (error) {
+        console.error('Error updating active status:', error);
+        res.status(500).json({ message: 'Failed to update active status.' });
+    }
+});
+
+// Fetch pending workers
+app.get('/auth/admin/workers/pending', authenticate, async (req, res) => {
+    try {
+        const [workers] = await db.query(
+            `SELECT users.id, users.full_name, users.email, worker_profiles.service_type, worker_profiles.experience_years
+            FROM users
+            JOIN worker_profiles ON users.id = worker_profiles.user_id
+            WHERE users.user_type = 'worker' AND users.status = 'pending'`
+        );
+        res.json(workers);
+    } catch (error) {
+        console.error('Error fetching pending workers:', error);
+        res.status(500).json({ message: 'Failed to fetch pending workers.' });
     }
 });
 
@@ -382,31 +552,47 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong.' });
 });
 
-// Graceful shutdown for process termination
-process.on('SIGINT', () => {
-    console.log('\nGracefully shutting down...');
-    process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-    console.log('\nProcess terminated.');
-    process.exit(0);
-});
-// Logout Route
-// Logout Route
-app.post('/auth/logout', (req, res) => {
+// Fetch all services
+app.get('/services/all', authenticate, async (req, res) => {
     try {
-        // Clear the token cookie
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-            sameSite: 'strict', // Prevent CSRF attacks
-        });
-
-        // Respond with success
-        res.json({ message: 'Logout successful.' });
+        const [services] = await db.query(
+            `SELECT services.id, services.name, services.price, users.full_name AS worker_name
+            FROM services
+            JOIN users ON services.worker_id = users.id`
+        );
+        res.json(services);
     } catch (error) {
-        console.error('Logout Error:', error);
-        res.status(500).json({ message: 'Logout failed due to an internal error.' });
+        console.error('Error fetching services:', error);
+        res.status(500).json({ message: 'Failed to fetch services.' });
     }
+});
+
+// Delete a service
+app.delete('/services/delete/:serviceId', authenticate, async (req, res) => {
+    try {
+        const { serviceId } = req.params;
+        await db.query('DELETE FROM services WHERE id = ?', [serviceId]);
+        res.json({ message: 'Service deleted successfully!' });
+    } catch (error) {
+        console.error('Error deleting service:', error);
+        res.status(500).json({ message: 'Failed to delete service.' });
+    }
+});
+
+// Fetch admin reports
+app.get('/admin/reports', authenticate, async (req, res) => {
+    try {
+        const [reports] = await db.query('SELECT * FROM system_reports');
+        res.json(reports);
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+        res.status(500).json({ message: 'Failed to fetch reports.' });
+    }
+});
+
+// Logout route for client
+app.post('/auth/logout', (req, res) => {
+    // Clear the token cookie
+    res.clearCookie('token');
+    res.status(200).json({ message: 'Logout successful' });
 });

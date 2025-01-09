@@ -21,7 +21,8 @@ async function fetchAdminData() {
 
         if (response.ok) {
             const data = await response.json();
-            document.getElementById('adminNamePlaceholder').textContent = data.user?.name || 'Admin';
+            // Use `full_name` from the `users` table
+            document.getElementById('adminNamePlaceholder').textContent = data.user?.full_name || 'Admin';
         } else {
             localStorage.removeItem('token');
             window.location.href = '/login.html';
@@ -34,7 +35,7 @@ async function fetchAdminData() {
 // Load pending workers
 async function loadPendingWorkers() {
     try {
-        const response = await fetch('/admin/workers/pending', {
+        const response = await fetch('/auth/admin/workers/pending', {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
@@ -44,8 +45,11 @@ async function loadPendingWorkers() {
             container.innerHTML = workers.length
                 ? workers.map(worker => `
                     <div class="worker-card">
-                        <h3>${worker.name}</h3>
+                        <h3>${worker.full_name}</h3> <!-- Use 'full_name' from the 'users' table -->
                         <p>Email: ${worker.email}</p>
+                        <p>Phone: ${worker.phonenumber || 'N/A'}</p> <!-- Use 'phonenumber' from the 'users' table -->
+                        <p>Service Type: ${worker.service_type}</p>
+                        <p>Experience: ${worker.experience_years} years</p>
                         <button onclick="approveWorker(${worker.id})">Approve</button>
                         <button onclick="rejectWorker(${worker.id})">Reject</button>
                     </div>`).join('')
@@ -61,7 +65,7 @@ async function loadPendingWorkers() {
 // Approve a worker
 async function approveWorker(workerId) {
     try {
-        const response = await fetch(`/admin/workers/approve/${workerId}`, {
+        const response = await fetch(`/auth/admin/workers/approve/${workerId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -80,7 +84,7 @@ async function approveWorker(workerId) {
 // Reject a worker
 async function rejectWorker(workerId) {
     try {
-        const response = await fetch(`/admin/workers/reject/${workerId}`, {
+        const response = await fetch(`/auth/admin/workers/reject/${workerId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
@@ -108,7 +112,8 @@ function loadServices() {
                 ? services.map(service => `
                     <div class="service-card">
                         <h3>${service.name}</h3>
-                        <p>Provider: ${service.worker_name}</p>
+                        <p>Provider: ${service.worker_name || 'N/A'}</p> <!-- Use 'worker_name' from joined data -->
+                        <p>Price: $${service.price.toFixed(2)}</p> <!-- Use 'price' from the 'services' table -->
                         <button onclick="deleteService(${service.id})">Delete</button>
                     </div>`).join('')
                 : '<p>No services available.</p>';

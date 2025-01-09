@@ -1,3 +1,4 @@
+import { getCookie } from './routes/utils.js';
 // Predefined Users
 const users = [
   { name: "Ali Elsaka", email: "ali@example.com", password: "123", role: "client" },

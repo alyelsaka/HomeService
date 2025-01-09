@@ -6,15 +6,39 @@
     <title>Admin Dashboard - HomeServices</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Language selector styling */
+        .language-selector {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        #language-selector {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            font-size: 16px;
+        }
+
+        /* RTL support for Arabic */
+        body[dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
 </head>
 <body class="dashboard-body">
     <!-- Navigation Bar -->
     <nav class="dashboard-nav">
-        <div class="nav-brand" onclick="location.href='index.html'">HomeServices</div>
+        <div class="nav-brand" onclick="location.href='index.html'" data-translate="home">HomeServices</div>
         <div class="admin-info">
-            <span id="adminName">Welcome, <span id="adminNamePlaceholder">Loading...</span></span>
+            <span id="adminName" data-translate="welcome">Welcome, <span id="adminNamePlaceholder">Loading...</span></span>
             <button onclick="logout()" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> <span data-translate="logout">Logout</span>
             </button>
         </div>
     </nav>
@@ -28,22 +52,22 @@
                     <i class="fas fa-user-circle"></i>
                 </div>
                 <div class="admin-status">
-                    <span id="currentStatus" class="status-badge active">Active</span>
+                    <span id="currentStatus" class="status-badge active" data-translate="active">Active</span>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
                 <button class="nav-item active" onclick="showSection('accounts')">
-                    <i class="fas fa-users"></i> Account Management
+                    <i class="fas fa-users"></i> <span data-translate="accountManagement">Account Management</span>
                 </button>
                 <button class="nav-item" onclick="showSection('workerVerification')">
-                    <i class="fas fa-id-card"></i> Worker Verification
+                    <i class="fas fa-id-card"></i> <span data-translate="workerVerification">Worker Verification</span>
                 </button>
                 <button class="nav-item" onclick="showSection('serviceManagement')">
-                    <i class="fas fa-cogs"></i> Service Management
+                    <i class="fas fa-cogs"></i> <span data-translate="serviceManagement">Service Management</span>
                 </button>
                 <button class="nav-item" onclick="showSection('systemMonitoring')">
-                    <i class="fas fa-chart-line"></i> System Monitoring
+                    <i class="fas fa-chart-line"></i> <span data-translate="systemMonitoring">System Monitoring</span>
                 </button>
             </nav>
         </aside>
@@ -52,40 +76,41 @@
         <main class="dashboard-main">
             <!-- Account Management Section -->
             <section id="accounts" class="dashboard-section active">
-                <h2>Account Management</h2>
+                <h2 data-translate="accountManagement">Account Management</h2>
                 <div id="accountsContainer" class="accounts-grid">
-                    <p>Loading account data...</p>
+                    <p data-translate="loadingAccounts">Loading account data...</p>
                 </div>
             </section>
 
             <!-- Worker Verification Section -->
             <section id="workerVerification" class="dashboard-section">
-                <h2>Worker Verification</h2>
+                <h2 data-translate="workerVerification">Worker Verification</h2>
                 <div id="pending-workers-container" class="pending-workers-container">
-                    <p>Loading pending workers...</p>
+                    <p data-translate="loadingPendingWorkers">Loading pending workers...</p>
                 </div>
             </section>
 
             <!-- Service Management Section -->
             <section id="serviceManagement" class="dashboard-section">
-                <h2>Service Management</h2>
-                <div id="servicesContainer" class="services-container">
-                    <p>Loading services...</p>
+                <h2 data-translate="serviceManagement">Service Management</h2>
+                <div id="services-container" class="services-container">
+                    <p data-translate="loadingServices">Loading services...</p>
                 </div>
             </section>
 
             <!-- System Monitoring Section -->
             <section id="systemMonitoring" class="dashboard-section">
-                <h2>System Monitoring</h2>
-                <div id="monitoringContainer" class="monitoring-container">
-                    <p>Loading system data...</p>
+                <h2 data-translate="systemMonitoring">System Monitoring</h2>
+                <div id="reports-container" class="monitoring-container">
+                    <p data-translate="loadingSystemData">Loading system data...</p>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- Footer -->
     <footer class="dashboard-footer">
-        <p>Contact us: support@homeservices.com | +123 456 7890</p>
+        <p data-translate="contactUs">Contact us: support@homeservices.com | +123 456 7890</p>
         <div class="social-media">
             <a href="#"><i class="fab fa-facebook"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
@@ -93,7 +118,245 @@
         </div>
     </footer>
 
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="language-selector" onchange="changeLanguage(this.value)">
+            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 中文 (Chinese)</option>
+            <option value="es">🇪🇸 Español (Spanish)</option>
+            <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+            <option value="ar">🇸🇦 العربية (Arabic)</option>
+            <option value="pt">🇵🇹 Português (Portuguese)</option>
+            <option value="bn">🇧🇩 বাংলা (Bengali)</option>
+            <option value="ru">🇷🇺 Русский (Russian)</option>
+            <option value="ja">🇯🇵 日本語 (Japanese)</option>
+            <option value="pa">🇮🇳 ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="de">🇩🇪 Deutsch (German)</option>
+            <option value="fr">🇫🇷 Français (French)</option>
+        </select>
+    </div>
+
     <script>
+        // Define translations for all supported languages
+        const translations = {
+            en: {
+                home: "HomeServices",
+                welcome: "Welcome",
+                logout: "Logout",
+                active: "Active",
+                accountManagement: "Account Management",
+                workerVerification: "Worker Verification",
+                serviceManagement: "Service Management",
+                systemMonitoring: "System Monitoring",
+                loadingAccounts: "Loading account data...",
+                loadingPendingWorkers: "Loading pending workers...",
+                loadingServices: "Loading services...",
+                loadingSystemData: "Loading system data...",
+                contactUs: "Contact us: support@homeservices.com | +123 456 7890"
+            },
+            zh: {
+                home: "家庭服务",
+                welcome: "欢迎",
+                logout: "登出",
+                active: "活跃",
+                accountManagement: "账户管理",
+                workerVerification: "工人验证",
+                serviceManagement: "服务管理",
+                systemMonitoring: "系统监控",
+                loadingAccounts: "正在加载账户数据...",
+                loadingPendingWorkers: "正在加载待处理工人...",
+                loadingServices: "正在加载服务...",
+                loadingSystemData: "正在加载系统数据...",
+                contactUs: "联系我们: support@homeservices.com | +123 456 7890"
+            },
+            es: {
+                home: "Servicios del Hogar",
+                welcome: "Bienvenido",
+                logout: "Cerrar sesión",
+                active: "Activo",
+                accountManagement: "Gestión de Cuentas",
+                workerVerification: "Verificación de Trabajadores",
+                serviceManagement: "Gestión de Servicios",
+                systemMonitoring: "Monitoreo del Sistema",
+                loadingAccounts: "Cargando datos de cuentas...",
+                loadingPendingWorkers: "Cargando trabajadores pendientes...",
+                loadingServices: "Cargando servicios...",
+                loadingSystemData: "Cargando datos del sistema...",
+                contactUs: "Contáctenos: support@homeservices.com | +123 456 7890"
+            },
+            hi: {
+                home: "होम सर्विसेज",
+                welcome: "स्वागत है",
+                logout: "लॉगआउट",
+                active: "सक्रिय",
+                accountManagement: "खाता प्रबंधन",
+                workerVerification: "कर्मचारी सत्यापन",
+                serviceManagement: "सेवा प्रबंधन",
+                systemMonitoring: "सिस्टम मॉनिटरिंग",
+                loadingAccounts: "खाता डेटा लोड हो रहा है...",
+                loadingPendingWorkers: "लंबित कर्मचारी लोड हो रहे हैं...",
+                loadingServices: "सेवाएं लोड हो रही हैं...",
+                loadingSystemData: "सिस्टम डेटा लोड हो रहा है...",
+                contactUs: "हमसे संपर्क करें: support@homeservices.com | +123 456 7890"
+            },
+            ar: {
+                home: "خدمات المنزل",
+                welcome: "مرحبًا",
+                logout: "تسجيل الخروج",
+                active: "نشط",
+                accountManagement: "إدارة الحسابات",
+                workerVerification: "التحقق من العمال",
+                serviceManagement: "إدارة الخدمات",
+                systemMonitoring: "مراقبة النظام",
+                loadingAccounts: "جارٍ تحميل بيانات الحسابات...",
+                loadingPendingWorkers: "جارٍ تحميل العمال المعلّقين...",
+                loadingServices: "جارٍ تحميل الخدمات...",
+                loadingSystemData: "جارٍ تحميل بيانات النظام...",
+                contactUs: "اتصل بنا: support@homeservices.com | +123 456 7890"
+            },
+            pt: {
+                home: "Serviços Domésticos",
+                welcome: "Bem-vindo",
+                logout: "Sair",
+                active: "Ativo",
+                accountManagement: "Gerenciamento de Contas",
+                workerVerification: "Verificação de Trabalhadores",
+                serviceManagement: "Gerenciamento de Serviços",
+                systemMonitoring: "Monitoramento do Sistema",
+                loadingAccounts: "Carregando dados da conta...",
+                loadingPendingWorkers: "Carregando trabalhadores pendentes...",
+                loadingServices: "Carregando serviços...",
+                loadingSystemData: "Carregando dados do sistema...",
+                contactUs: "Contate-nos: support@homeservices.com | +123 456 7890"
+            },
+            bn: {
+                home: "হোম সার্ভিসেস",
+                welcome: "স্বাগতম",
+                logout: "লগআউট",
+                active: "সক্রিয়",
+                accountManagement: "অ্যাকাউন্ট ব্যবস্থাপনা",
+                workerVerification: "কর্মী যাচাইকরণ",
+                serviceManagement: "সেবা ব্যবস্থাপনা",
+                systemMonitoring: "সিস্টেম পর্যবেক্ষণ",
+                loadingAccounts: "অ্যাকাউন্ট ডেটা লোড হচ্ছে...",
+                loadingPendingWorkers: "মুলতুবি কর্মী লোড হচ্ছে...",
+                loadingServices: "সেবা লোড হচ্ছে...",
+                loadingSystemData: "সিস্টেম ডেটা লোড হচ্ছে...",
+                contactUs: "যোগাযোগ করুন: support@homeservices.com | +123 456 7890"
+            },
+            ru: {
+                home: "Домашние Услуги",
+                welcome: "Добро пожаловать",
+                logout: "Выйти",
+                active: "Активный",
+                accountManagement: "Управление Аккаунтами",
+                workerVerification: "Проверка Работников",
+                serviceManagement: "Управление Услугами",
+                systemMonitoring: "Мониторинг Системы",
+                loadingAccounts: "Загрузка данных аккаунтов...",
+                loadingPendingWorkers: "Загрузка ожидающих работников...",
+                loadingServices: "Загрузка услуг...",
+                loadingSystemData: "Загрузка данных системы...",
+                contactUs: "Свяжитесь с нами: support@homeservices.com | +123 456 7890"
+            },
+            ja: {
+                home: "ホームサービス",
+                welcome: "ようこそ",
+                logout: "ログアウト",
+                active: "アクティブ",
+                accountManagement: "アカウント管理",
+                workerVerification: "ワーカーの確認",
+                serviceManagement: "サービス管理",
+                systemMonitoring: "システム監視",
+                loadingAccounts: "アカウントデータを読み込み中...",
+                loadingPendingWorkers: "保留中のワーカーを読み込み中...",
+                loadingServices: "サービスを読み込み中...",
+                loadingSystemData: "システムデータを読み込み中...",
+                contactUs: "お問い合わせ: support@homeservices.com | +123 456 7890"
+            },
+            pa: {
+                home: "ਘਰ ਸੇਵਾਵਾਂ",
+                welcome: "ਜੀ ਆਇਆਂ ਨੂੰ",
+                logout: "ਲੌਗਆਉਟ",
+                active: "ਸਰਗਰਮ",
+                accountManagement: "ਖਾਤਾ ਪ੍ਰਬੰਧਨ",
+                workerVerification: "ਕਰਮਚਾਰੀ ਪੜਤਾਲ",
+                serviceManagement: "ਸੇਵਾ ਪ੍ਰਬੰਧਨ",
+                systemMonitoring: "ਸਿਸਟਮ ਨਿਗਰਾਨੀ",
+                loadingAccounts: "ਖਾਤਾ ਡੇਟਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+                loadingPendingWorkers: "ਲੰਬਤ ਕਰਮਚਾਰੀ ਲੋਡ ਹੋ ਰਹੇ ਹਨ...",
+                loadingServices: "ਸੇਵਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ...",
+                loadingSystemData: "ਸਿਸਟਮ ਡੇਟਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+                contactUs: "ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ: support@homeservices.com | +123 456 7890"
+            },
+            de: {
+                home: "Hausdienstleistungen",
+                welcome: "Willkommen",
+                logout: "Abmelden",
+                active: "Aktiv",
+                accountManagement: "Kontoverwaltung",
+                workerVerification: "Mitarbeiterüberprüfung",
+                serviceManagement: "Dienstleistungsverwaltung",
+                systemMonitoring: "Systemüberwachung",
+                loadingAccounts: "Kontodaten werden geladen...",
+                loadingPendingWorkers: "Ausstehende Mitarbeiter werden geladen...",
+                loadingServices: "Dienstleistungen werden geladen...",
+                loadingSystemData: "Systemdaten werden geladen...",
+                contactUs: "Kontaktieren Sie uns: support@homeservices.com | +123 456 7890"
+            },
+            fr: {
+                home: "Services à Domicile",
+                welcome: "Bienvenue",
+                logout: "Déconnexion",
+                active: "Actif",
+                accountManagement: "Gestion des Comptes",
+                workerVerification: "Vérification des Travailleurs",
+                serviceManagement: "Gestion des Services",
+                systemMonitoring: "Surveillance du Système",
+                loadingAccounts: "Chargement des données du compte...",
+                loadingPendingWorkers: "Chargement des travailleurs en attente...",
+                loadingServices: "Chargement des services...",
+                loadingSystemData: "Chargement des données du système...",
+                contactUs: "Contactez-nous: support@homeservices.com | +123 456 7890"
+            }
+        };
+
+        // Function to change language
+        function changeLanguage(language) {
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[language] && translations[language][key]) {
+                    element.textContent = translations[language][key];
+                }
+            });
+
+            // Update text direction for RTL languages (e.g., Arabic)
+            if (language === "ar") {
+                document.body.setAttribute("dir", "rtl");
+            } else {
+                document.body.setAttribute("dir", "ltr");
+            }
+        }
+
+        // Initialize with default language (English)
+        document.addEventListener('DOMContentLoaded', () => {
+            changeLanguage('en');
+        });
+
+        // Fetch client details on page load
+        async function fetchClientDetails() {
+            try {
+                const response = await fetch('/auth/user', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+                document.getElementById('adminNamePlaceholder').textContent = data.user.name;
+            } catch (error) {
+                console.error('Error fetching client details:', error);
+            }
+        }
+
         // Show the selected section
         function showSection(sectionId) {
             document.querySelectorAll('.dashboard-section').forEach(section => {
@@ -107,76 +370,186 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Example: Fetch account data
-        async function loadAccounts() {
-            const container = document.getElementById('accountsContainer');
-            container.innerHTML = '<p>Loading account data...</p>';
+        // Load pending workers
+        async function loadPendingWorkers() {
             try {
-                const response = await fetch('/admin/accounts');
-                const data = await response.json();
-                container.innerHTML = ''; // Clear existing content
-                data.forEach(account => {
-                    const card = document.createElement('div');
-                    card.classList.add('account-card');
-                    card.innerHTML = `
-                        <div class="account-header">
-                            <h3>${account.type} Accounts</h3>
-                        </div>
-                        <div class="account-details">
-                            <p><i class="fas fa-user"></i> Total: ${account.total}</p>
-                            <p><i class="fas fa-clock"></i> Last Updated: ${account.lastUpdated}</p>
-                        </div>
-                        <div class="account-actions">
-                            <button class="manage-btn">Manage</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                const response = await fetch('/auth/admin/workers/pending', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+
+                if (response.ok) {
+                    const workers = await response.json();
+                    const container = document.getElementById('pending-workers-container');
+                    container.innerHTML = workers.length
+                        ? workers.map(worker => `
+                            <div class="worker-card">
+                                <h3>${worker.full_name}</h3>
+                                <p>Email: ${worker.email}</p>
+                                <p>Phone: ${worker.phonenumber || 'N/A'}</p>
+                                <p>Service Type: ${worker.service_type}</p>
+                                <p>Experience: ${worker.experience_years} years</p>
+                                <button onclick="approveWorker(${worker.id})">Approve</button>
+                                <button onclick="rejectWorker(${worker.id})">Reject</button>
+                            </div>`).join('')
+                        : '<p>No pending workers.</p>';
+                } else {
+                    console.error('Failed to fetch pending workers.');
+                }
             } catch (error) {
-                console.error('Error loading account data:', error);
+                console.error('Error loading pending workers:', error);
             }
         }
 
-        // Example: Fetch worker verification data
-        async function loadWorkerVerifications() {
-            const container = document.getElementById('verificationContainer');
-            container.innerHTML = '<p>Loading pending verifications...</p>';
+        // Approve a worker
+        async function approveWorker(workerId) {
             try {
-                const response = await fetch('/admin/verifications');
-                const data = await response.json();
-                container.innerHTML = ''; // Clear existing content
-                data.forEach(verification => {
-                    const card = document.createElement('div');
-                    card.classList.add('verification-card');
-                    card.innerHTML = `
-                        <div class="verification-header">
-                            <h3>${verification.workerName}</h3>
-                        </div>
-                        <div class="verification-details">
-                            <p><i class="fas fa-user"></i> Worker: ${verification.workerName}</p>
-                            <p><i class="fas fa-id-card"></i> ID Submitted: ${verification.idSubmitted}</p>
-                            <p><i class="fas fa-file"></i> Documents: ${verification.documents}</p>
-                        </div>
-                        <div class="verification-actions">
-                            <button class="verify-btn" onclick="verifyWorker(${verification.id})">Verify</button>
-                            <button class="reject-btn" onclick="rejectWorker(${verification.id})">Reject</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                const response = await fetch(`/auth/admin/workers/approve/${workerId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+
+                if (response.ok) {
+                    alert('Worker approved successfully!');
+                    loadPendingWorkers();
+                } else {
+                    alert('Failed to approve worker.');
+                }
             } catch (error) {
-                console.error('Error loading verification data:', error);
+                console.error('Error approving worker:', error);
+            }
+        }
+
+        // Reject a worker
+        async function rejectWorker(workerId) {
+            try {
+                const response = await fetch(`/auth/admin/workers/reject/${workerId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (response.ok) {
+                    alert('Worker rejected successfully!');
+                    loadPendingWorkers();
+                } else {
+                    alert('Failed to reject worker.');
+                }
+            } catch (error) {
+                console.error('Error rejecting worker:', error);
+            }
+        }
+
+        // Load all services
+        async function loadServices() {
+            try {
+                const response = await fetch('/services/all', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (response.ok) {
+                    const services = await response.json();
+                    const container = document.getElementById('services-container');
+                    container.innerHTML = services.length
+                        ? services.map(service => `
+                            <div class="service-card">
+                                <h3>${service.name}</h3>
+                                <p>Description: ${service.description || 'N/A'}</p>
+                                <p>Price: $${service.price.toFixed(2)}</p>
+                                <p>Status: ${service.status}</p>
+                                <p>Worker ID: ${service.worker_id}</p>
+                                <p>Booked By: ${service.booked_by || 'N/A'}</p>
+                                <p>Created At: ${new Date(service.created_at).toLocaleString()}</p>
+                                <button onclick="deleteService(${service.id})">Delete</button>
+                            </div>`).join('')
+                        : '<p>No services available.</p>';
+                } else {
+                    console.error('Failed to fetch services.');
+                }
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+
+        // Delete a service
+        async function deleteService(serviceId) {
+            try {
+                const response = await fetch(`/services/delete/${serviceId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (response.ok) {
+                    alert('Service deleted successfully!');
+                    loadServices();
+                } else {
+                    alert('Failed to delete service.');
+                }
+            } catch (error) {
+                console.error('Error deleting service:', error);
+            }
+        }
+
+        // Load admin reports
+        async function loadReports() {
+            try {
+                const response = await fetch('/admin/reports', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (response.ok) {
+                    const reports = await response.json();
+                    const container = document.getElementById('reports-container');
+                    container.innerHTML = reports.length
+                        ? reports.map(report => `
+                            <div class="report-card">
+                                <h3>${report.title}</h3>
+                                <p>${report.description}</p>
+                            </div>`).join('')
+                        : '<p>No reports available.</p>';
+                } else {
+                    console.error('Failed to fetch reports.');
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('No token found. You are already logged out.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                const response = await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Ensure cookies are sent with the request
+                });
+
+                if (response.ok) {
+                    localStorage.removeItem('token'); // Clear the token from localStorage
+                    window.location.href = '/login.html'; // Redirect to the login page
+                } else {
+                    const result = await response.json();
+                    alert(result.message || 'Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('An error occurred while logging out.');
             }
         }
 
         // Load initial data
         document.addEventListener('DOMContentLoaded', () => {
-            loadAccounts();
-            loadWorkerVerifications();
+            fetchClientDetails();
+            loadPendingWorkers();
         });
     </script>
-
-    <!-- Include the admin-dashboard.js file at the end of the body -->
-    <script src="admin-dashboard.js"></script>
 </body>
 </html>

@@ -6,46 +6,78 @@
     <title>HomeServices - Register</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Language selector styling */
+        .language-selector {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        #language-selector {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            font-size: 16px;
+        }
+
+        /* RTL support for Arabic */
+        body[dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Hide worker fields by default */
+        .worker-fields.hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body class="auth-page">
     <nav class="navbar">
-        <!-- Updated logo with a clickable link -->
-        <a href="indx.html" class="nav-brand">HomeServices</a>
+        <a href="index.html" class="nav-brand" data-translate="home">HomeServices</a>
         <div class="nav-links">
-            <button onclick="location.href='login.html'" class="login-btn">Login</button>
+            <button onclick="location.href='login.html'" class="login-btn" data-translate="login">Login</button>
         </div>
     </nav>
 
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <h2>Create Account</h2>
-                <p>Join our community today</p>
+                <h2 data-translate="createAccount">Create Account</h2>
+                <p data-translate="joinCommunity">Join our community today</p>
             </div>
 
             <form class="auth-form" id="registerForm">
                 <div class="form-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" name="full_name" required placeholder="Full Name">
+                    <input type="text" name="full_name" required placeholder="Full Name" data-translate="fullNamePlaceholder">
                 </div>
 
                 <div class="form-group">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" required placeholder="Email Address">
+                    <input type="email" name="email" required placeholder="Email Address" data-translate="emailPlaceholder">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" name="phonenumber" required placeholder="Phone Number" data-translate="phonePlaceholder">
                 </div>
 
                 <div class="form-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="password" required placeholder="Password">
+                    <input type="password" name="password" required placeholder="Password" data-translate="passwordPlaceholder">
                 </div>
 
                 <div class="form-group">
                     <i class="fas fa-user-tag"></i>
                     <select name="user_type" required id="userType" onchange="toggleWorkerFields(this.value)">
-                        <option value="">Select Account Type</option>
-                        <option value="client">Client</option>
-                        <option value="worker">Worker</option>
-                        <option value="admin">Admin</option>
+                        <option value="" data-translate="selectAccountType">Select Account Type</option>
+                        <option value="client" data-translate="client">Client</option>
+                        <option value="worker" data-translate="worker">Worker</option>
                     </select>
                 </div>
 
@@ -53,28 +85,325 @@
                     <div class="form-group">
                         <i class="fas fa-tools"></i>
                         <select name="service_type" id="skills">
-                            <option value="">Select Your Service</option>
-                            <option value="plumber">Plumber</option>
-                            <option value="electrician">Electrician</option>
-                            <option value="cleaner">Cleaner</option>
+                            <option value="" data-translate="selectService">Select Your Service</option>
+                            <option value="plumber" data-translate="plumber">Plumber</option>
+                            <option value="electrician" data-translate="electrician">Electrician</option>
+                            <option value="cleaner" data-translate="cleaner">Cleaner</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-briefcase"></i>
-                        <input type="number" name="experience_years" id="experience" placeholder="Years of Experience" min="0" max="50">
+                        <input type="number" name="experience_years" id="experience" placeholder="Years of Experience" min="0" max="50" data-translate="experiencePlaceholder">
                     </div>
                 </div>
 
-                <button type="button" class="auth-button" id="registerBtn">Register</button>
+                <button type="button" class="auth-button" id="registerBtn" data-translate="registerButton">Register</button>
             </form>
 
             <div class="auth-footer">
-                <p>Already have an account? <a href="login.html">Login</a></p>
+                <p data-translate="alreadyHaveAccount">Already have an account? <a href="login.html" data-translate="loginLink">Login</a></p>
             </div>
         </div>
     </div>
 
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="language-selector" onchange="changeLanguage(this.value)">
+            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 中文 (Chinese)</option>
+            <option value="es">🇪🇸 Español (Spanish)</option>
+            <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+            <option value="ar">🇸🇦 العربية (Arabic)</option>
+            <option value="pt">🇵🇹 Português (Portuguese)</option>
+            <option value="bn">🇧🇩 বাংলা (Bengali)</option>
+            <option value="ru">🇷🇺 Русский (Russian)</option>
+            <option value="ja">🇯🇵 日本語 (Japanese)</option>
+            <option value="pa">🇮🇳 ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="de">🇩🇪 Deutsch (German)</option>
+            <option value="fr">🇫🇷 Français (French)</option>
+        </select>
+    </div>
+
     <script>
+        // Define translations for all supported languages
+        const translations = {
+            en: {
+                home: "HomeServices",
+                login: "Login",
+                createAccount: "Create Account",
+                joinCommunity: "Join our community today",
+                fullNamePlaceholder: "Full Name",
+                emailPlaceholder: "Email Address",
+                phonePlaceholder: "Phone Number",
+                passwordPlaceholder: "Password",
+                selectAccountType: "Select Account Type",
+                client: "Client",
+                worker: "Worker",
+                selectService: "Select Your Service",
+                plumber: "Plumber",
+                electrician: "Electrician",
+                cleaner: "Cleaner",
+                experiencePlaceholder: "Years of Experience",
+                registerButton: "Register",
+                alreadyHaveAccount: "Already have an account?",
+                loginLink: "Login"
+            },
+            zh: {
+                home: "家庭服务",
+                login: "登录",
+                createAccount: "创建账户",
+                joinCommunity: "立即加入我们的社区",
+                fullNamePlaceholder: "全名",
+                emailPlaceholder: "电子邮件地址",
+                phonePlaceholder: "电话号码",
+                passwordPlaceholder: "密码",
+                selectAccountType: "选择账户类型",
+                client: "客户",
+                worker: "工人",
+                selectService: "选择您的服务",
+                plumber: "水管工",
+                electrician: "电工",
+                cleaner: "清洁工",
+                experiencePlaceholder: "工作经验（年）",
+                registerButton: "注册",
+                alreadyHaveAccount: "已经有账户了？",
+                loginLink: "登录"
+            },
+            es: {
+                home: "Servicios del Hogar",
+                login: "Iniciar Sesión",
+                createAccount: "Crear Cuenta",
+                joinCommunity: "Únase a nuestra comunidad hoy",
+                fullNamePlaceholder: "Nombre Completo",
+                emailPlaceholder: "Correo Electrónico",
+                phonePlaceholder: "Número de Teléfono",
+                passwordPlaceholder: "Contraseña",
+                selectAccountType: "Seleccionar Tipo de Cuenta",
+                client: "Cliente",
+                worker: "Trabajador",
+                selectService: "Seleccione Su Servicio",
+                plumber: "Fontanero",
+                electrician: "Electricista",
+                cleaner: "Limpieza",
+                experiencePlaceholder: "Años de Experiencia",
+                registerButton: "Registrarse",
+                alreadyHaveAccount: "¿Ya tienes una cuenta?",
+                loginLink: "Iniciar Sesión"
+            },
+            hi: {
+                home: "होम सर्विसेज",
+                login: "लॉगिन",
+                createAccount: "खाता बनाएं",
+                joinCommunity: "आज ही हमारे समुदाय में शामिल हों",
+                fullNamePlaceholder: "पूरा नाम",
+                emailPlaceholder: "ईमेल पता",
+                phonePlaceholder: "फोन नंबर",
+                passwordPlaceholder: "पासवर्ड",
+                selectAccountType: "खाता प्रकार चुनें",
+                client: "ग्राहक",
+                worker: "कर्मचारी",
+                selectService: "अपनी सेवा चुनें",
+                plumber: "प्लंबर",
+                electrician: "इलेक्ट्रीशियन",
+                cleaner: "सफाई कर्मचारी",
+                experiencePlaceholder: "अनुभव (वर्ष)",
+                registerButton: "रजिस्टर",
+                alreadyHaveAccount: "क्या आपके पास पहले से एक खाता है?",
+                loginLink: "लॉगिन"
+            },
+            ar: {
+                home: "خدمات المنزل",
+                login: "تسجيل الدخول",
+                createAccount: "إنشاء حساب",
+                joinCommunity: "انضم إلى مجتمعنا اليوم",
+                fullNamePlaceholder: "الاسم الكامل",
+                emailPlaceholder: "عنوان البريد الإلكتروني",
+                phonePlaceholder: "رقم الهاتف",
+                passwordPlaceholder: "كلمة المرور",
+                selectAccountType: "اختر نوع الحساب",
+                client: "عميل",
+                worker: "عامل",
+                selectService: "اختر خدمتك",
+                plumber: "سباك",
+                electrician: "كهربائي",
+                cleaner: "عامل نظافة",
+                experiencePlaceholder: "سنوات الخبرة",
+                registerButton: "تسجيل",
+                alreadyHaveAccount: "هل لديك حساب بالفعل؟",
+                loginLink: "تسجيل الدخول"
+            },
+            pt: {
+                home: "Serviços Domésticos",
+                login: "Login",
+                createAccount: "Criar Conta",
+                joinCommunity: "Junte-se à nossa comunidade hoje",
+                fullNamePlaceholder: "Nome Completo",
+                emailPlaceholder: "Endereço de E-mail",
+                phonePlaceholder: "Número de Telefone",
+                passwordPlaceholder: "Senha",
+                selectAccountType: "Selecione o Tipo de Conta",
+                client: "Cliente",
+                worker: "Trabalhador",
+                selectService: "Selecione Seu Serviço",
+                plumber: "Encanador",
+                electrician: "Eletricista",
+                cleaner: "Limpeza",
+                experiencePlaceholder: "Anos de Experiência",
+                registerButton: "Registrar",
+                alreadyHaveAccount: "Já tem uma conta?",
+                loginLink: "Login"
+            },
+            bn: {
+                home: "হোম সার্ভিসেস",
+                login: "লগইন",
+                createAccount: "অ্যাকাউন্ট তৈরি করুন",
+                joinCommunity: "আজই আমাদের সম্প্রদায়ে যোগ দিন",
+                fullNamePlaceholder: "পুরো নাম",
+                emailPlaceholder: "ইমেল ঠিকানা",
+                phonePlaceholder: "ফোন নম্বর",
+                passwordPlaceholder: "পাসওয়ার্ড",
+                selectAccountType: "অ্যাকাউন্টের ধরন নির্বাচন করুন",
+                client: "ক্লায়েন্ট",
+                worker: "কর্মী",
+                selectService: "আপনার পরিষেবা নির্বাচন করুন",
+                plumber: "প্লাম্বার",
+                electrician: "ইলেকট্রিশিয়ান",
+                cleaner: "পরিচ্ছন্নতা কর্মী",
+                experiencePlaceholder: "অভিজ্ঞতা (বছর)",
+                registerButton: "নিবন্ধন",
+                alreadyHaveAccount: "ইতিমধ্যে একটি অ্যাকাউন্ট আছে?",
+                loginLink: "লগইন"
+            },
+            ru: {
+                home: "Домашние Услуги",
+                login: "Войти",
+                createAccount: "Создать Аккаунт",
+                joinCommunity: "Присоединяйтесь к нашему сообществу сегодня",
+                fullNamePlaceholder: "Полное Имя",
+                emailPlaceholder: "Адрес Электронной Почты",
+                phonePlaceholder: "Номер Телефона",
+                passwordPlaceholder: "Пароль",
+                selectAccountType: "Выберите Тип Аккаунта",
+                client: "Клиент",
+                worker: "Работник",
+                selectService: "Выберите Вашу Услугу",
+                plumber: "Сантехник",
+                electrician: "Электрик",
+                cleaner: "Уборщик",
+                experiencePlaceholder: "Опыт (лет)",
+                registerButton: "Зарегистрироваться",
+                alreadyHaveAccount: "Уже есть аккаунт?",
+                loginLink: "Войти"
+            },
+            ja: {
+                home: "ホームサービス",
+                login: "ログイン",
+                createAccount: "アカウントを作成",
+                joinCommunity: "今日から私たちのコミュニティに参加しましょう",
+                fullNamePlaceholder: "フルネーム",
+                emailPlaceholder: "メールアドレス",
+                phonePlaceholder: "電話番号",
+                passwordPlaceholder: "パスワード",
+                selectAccountType: "アカウントタイプを選択",
+                client: "クライアント",
+                worker: "ワーカー",
+                selectService: "サービスを選択",
+                plumber: "配管工",
+                electrician: "電気技師",
+                cleaner: "清掃員",
+                experiencePlaceholder: "経験年数",
+                registerButton: "登録",
+                alreadyHaveAccount: "すでにアカウントをお持ちですか？",
+                loginLink: "ログイン"
+            },
+            pa: {
+                home: "ਘਰ ਸੇਵਾਵਾਂ",
+                login: "ਲੌਗਇਨ",
+                createAccount: "ਖਾਤਾ ਬਣਾਓ",
+                joinCommunity: "ਅੱਜ ਹੀ ਸਾਡੇ ਕਮਿਊਨਿਟੀ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ",
+                fullNamePlaceholder: "ਪੂਰਾ ਨਾਮ",
+                emailPlaceholder: "ਈਮੇਲ ਪਤਾ",
+                phonePlaceholder: "ਫੋਨ ਨੰਬਰ",
+                passwordPlaceholder: "ਪਾਸਵਰਡ",
+                selectAccountType: "ਖਾਤੇ ਦੀ ਕਿਸਮ ਚੁਣੋ",
+                client: "ਕਲਾਇੰਟ",
+                worker: "ਕਰਮਚਾਰੀ",
+                selectService: "ਆਪਣੀ ਸੇਵਾ ਚੁਣੋ",
+                plumber: "ਪਲੰਬਰ",
+                electrician: "ਇਲੈਕਟ੍ਰੀਸ਼ੀਅਨ",
+                cleaner: "ਸਫਾਈ ਕਰਮਚਾਰੀ",
+                experiencePlaceholder: "ਅਨੁਭਵ (ਸਾਲ)",
+                registerButton: "ਰਜਿਸਟਰ",
+                alreadyHaveAccount: "ਕੀ ਤੁਹਾਡੇ ਕੋਲ ਪਹਿਲਾਂ ਤੋਂ ਹੀ ਖਾਤਾ ਹੈ?",
+                loginLink: "ਲੌਗਇਨ"
+            },
+            de: {
+                home: "Hausdienstleistungen",
+                login: "Anmelden",
+                createAccount: "Konto Erstellen",
+                joinCommunity: "Treten Sie noch heute unserer Community bei",
+                fullNamePlaceholder: "Vollständiger Name",
+                emailPlaceholder: "E-Mail-Adresse",
+                phonePlaceholder: "Telefonnummer",
+                passwordPlaceholder: "Passwort",
+                selectAccountType: "Kontotyp Auswählen",
+                client: "Kunde",
+                worker: "Arbeiter",
+                selectService: "Wählen Sie Ihren Service",
+                plumber: "Klempner",
+                electrician: "Elektriker",
+                cleaner: "Reinigungskraft",
+                experiencePlaceholder: "Berufserfahrung (Jahre)",
+                registerButton: "Registrieren",
+                alreadyHaveAccount: "Haben Sie bereits ein Konto?",
+                loginLink: "Anmelden"
+            },
+            fr: {
+                home: "Services à Domicile",
+                login: "Connexion",
+                createAccount: "Créer un Compte",
+                joinCommunity: "Rejoignez notre communauté aujourd'hui",
+                fullNamePlaceholder: "Nom Complet",
+                emailPlaceholder: "Adresse E-mail",
+                phonePlaceholder: "Numéro de Téléphone",
+                passwordPlaceholder: "Mot de Passe",
+                selectAccountType: "Sélectionnez le Type de Compte",
+                client: "Client",
+                worker: "Travailleur",
+                selectService: "Sélectionnez Votre Service",
+                plumber: "Plombier",
+                electrician: "Électricien",
+                cleaner: "Nettoyeur",
+                experiencePlaceholder: "Années d'Expérience",
+                registerButton: "S'inscrire",
+                alreadyHaveAccount: "Vous avez déjà un compte?",
+                loginLink: "Connexion"
+            }
+        };
+
+        // Function to change language
+        function changeLanguage(language) {
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[language] && translations[language][key]) {
+                    element.textContent = translations[language][key];
+                }
+            });
+
+            // Update text direction for RTL languages (e.g., Arabic)
+            if (language === "ar") {
+                document.body.setAttribute("dir", "rtl");
+            } else {
+                document.body.setAttribute("dir", "ltr");
+            }
+        }
+
+        // Initialize with default language (English)
+        document.addEventListener('DOMContentLoaded', () => {
+            changeLanguage('en');
+        });
+
         // Toggle visibility of worker-specific fields
         function toggleWorkerFields(userType) {
             const workerFields = document.getElementById('workerFields');
@@ -99,23 +428,18 @@
                     body: JSON.stringify(formObject)
                 });
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert(result.message || 'Registration successful!');
-                    window.location.href = 'login.html'; // Redirect to login page
-                } else {
-                    alert(result.message || 'Registration failed. Please try again.');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Registration failed. Please try again.');
                 }
+
+                const result = await response.json();
+                alert(result.message || 'Registration successful!');
+                window.location.href = 'login.html'; // Redirect to login page
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while registering.');
+                alert(error.message || 'An error occurred while registering.');
             }
-        });
-
-        // Ensure that clicking the HomeServices logo redirects correctly
-        document.querySelector('.nav-brand').addEventListener('click', (event) => {
-            event.preventDefault();
-            location.href = 'indx.html';
         });
     </script>
 </body>
